@@ -188,20 +188,22 @@ print(fromByte.array);
     print("sendPacket sendPacket $d");
   }
 
-
-
   ///
   //
   ///
   String host = "142.132.214.220";
   int port = 6999;
-  String responseDataRequest = "Wating ..... ";
+  String responseDataRequest = "Initial";
+
   //
   String? sessionId;
   String? keyEncepted;
+
   requestLiveInfo() async {
+    responseDataRequest = "Waiting ......";
+    setState(() {});
     String token =
-        "Bearer 651c7944b33c8c49b61d77bed886c75e52e1656f70db56fa07de3ba1f40689b6";
+        "Bearer cdb7cda409e67390845f384c41d63f6a3a23578ecc2ef33980e356502078dc71";
 
     String liveInfoApi = "https://api.doorbird.io/live/info";
 
@@ -217,88 +219,128 @@ print(fromByte.array);
         responseDataRequest = "Yoy Aye Unauthorized";
       } else if (response.statusCode == 200) {
         // Run Camera Fun
-        responseDataRequest = '';
+        responseDataRequest = 'Success';
+
         Map<String, dynamic> jsonData = json.decode(response.toString());
         sessionId = jsonData["video"]["cloud"]["mjpg"]["default"]["session"];
         keyEncepted = jsonData["video"]["cloud"]["mjpg"]["default"]["key"];
-        print("keyEncepted keyEncepted keyEncepted  ==>   $keyEncepted");
-        datagramSocket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
-        setState(() {
-          _counter++;
-        });
-        print("000");
-        Uint8List uint8list = Uint8List(16 * 1024);
-        print("111");
+        print("keyEncepted    ==>   $keyEncepted");
 
-        datagramPacket = Datagram(
-            uint8list, InternetAddress(host, type: InternetAddressType.any), 6999);
-
-        print("222");
-
-        print(await datagramPacket!.address.reverse());
-        var lastSubscribe = 0;
-
-        Timer.periodic(const Duration(seconds: 2), (timer) {
-          ByteData subscribe = ByteData(0);
-          String subscribeString = subscribe.toString();
-          var videoType = UdpConstants.PACKET_NO_VIDEO;
-          var audioType = UdpConstants.PACKET_NO_AUDIO;
-          subscribe = UdpConstants.FLAG_STATE;
-          ByteBuffer bb = ByteBuffer(capacity: 128);
-          // BytesBuilder bb = BytesBuilder.allocate(128);
-
-          // bb.addByte(UdpConstants.PACKET_SUBSCRIBE.buffer.asInt32List()[0]);
-          bb.addByte(UdpConstants.PACKET_SUBSCRIBE.buffer.lengthInBytes);
-          bb.addByte((subscribeSeq >> 16));
-          bb.addByte((subscribeSeq >> 8));
-          bb.addByte(subscribeSeq);
-          List<int> session = sessionId!.codeUnits;
-
-          bb.addByte(session.length);
-          bb.append(session);
-          bb.addByte(5);
-          bb.addByte(25);
-          bb.addByte(47);
-
-          subscribeSeq++;
-
-          // datagramSocket.receive();
-
-          final d = datagramSocket.send(bb.getData(), InternetAddress(host), port);
-          print("SEND SEND $d");
-
-          requestedFlags = subscribe.buffer.lengthInBytes;
-
-          // if (lastSubscribe + (currentFlags == requestedFlags ? 15000 : 500) <
-          //     DateTime.now().millisecond) {
-          //   print("Inside IFF");
-          //   lastSubscribe = DateTime.now().millisecond;
-          //   sendSubscribe(false);
-          // }
-          datagramSocket.timeout(const Duration(milliseconds: 1000));
-          Datagram? datagram = datagramSocket.receive();
-          print(datagram);
-          if (datagram != null) {
-            print("DATA IS NOT NULL ");
-            print(datagram.data.toString());
-            String v = String.fromCharCodes(datagram.data);
-            print(v);
-
-            String dd = encropt(v, keyEncepted!);
-            print(dd);
-          }
-        });
-
+        runCamera();
       }
+      //   datagramSocket =
+      //       await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
+      //   setState(() {
+      //     _counter++;
+      //   });
+      //   print("000");
+      //   Uint8List uint8list = Uint8List(16 * 1024);
+      //   print("111");
+      //
+      //   datagramPacket = Datagram(uint8list,
+      //       InternetAddress(host, type: InternetAddressType.any), 6999);
+      //
+      //   print("222");
+      //
+      //   print(await datagramPacket!.address.reverse());
+      //   var lastSubscribe = 0;
+      //
+      //   Timer.periodic(const Duration(seconds: 2), (timer) {
+      //     ByteData subscribe = ByteData(0);
+      //     String subscribeString = subscribe.toString();
+      //     var videoType = UdpConstants.PACKET_NO_VIDEO;
+      //     var audioType = UdpConstants.PACKET_NO_AUDIO;
+      //     subscribe = UdpConstants.FLAG_STATE;
+      //     ByteBuffer bb = ByteBuffer(capacity: 128);
+      //     // BytesBuilder bb = BytesBuilder.allocate(128);
+      //
+      //     // bb.addByte(UdpConstants.PACKET_SUBSCRIBE.buffer.asInt32List()[0]);
+      //     bb.addByte(UdpConstants.PACKET_SUBSCRIBE.buffer.lengthInBytes);
+      //     bb.addByte((subscribeSeq >> 16));
+      //     bb.addByte((subscribeSeq >> 8));
+      //     bb.addByte(subscribeSeq);
+      //     List<int> session = sessionId!.codeUnits;
+      //
+      //     bb.addByte(session.length);
+      //     bb.append(session);
+      //     bb.addByte(5);
+      //     bb.addByte(25);
+      //     bb.addByte(47);
+      //
+      //     subscribeSeq++;
+      //
+      //     // datagramSocket.receive();
+      //
+      //     final d =
+      //         datagramSocket.send(bb.getData(), InternetAddress(host), port);
+      //     // print("SEND SEND $d");
+      //
+      //     requestedFlags = subscribe.buffer.lengthInBytes;
+      //
+      //     // if (lastSubscribe + (currentFlags == requestedFlags ? 15000 : 500) <
+      //     //     DateTime.now().millisecond) {
+      //     //   print("Inside IFF");
+      //     //   lastSubscribe = DateTime.now().millisecond;
+      //     //   sendSubscribe(false);
+      //     // }
+      //     datagramSocket.timeout(const Duration(milliseconds: 1000));
+      //     Datagram? datagram = datagramSocket.receive();
+      //     print(datagram);
+      //     if (datagram != null) {
+      //       // print("DATA IS NOT NULL ");
+      //       // print(datagram.data.toString());
+      //       String v = String.fromCharCodes(datagram.data);
+      //       print(v);
+      //
+      //       String dd = encropt(v, keyEncepted!);
+      //       print(dd);
+      //     }
+      //   });
+      // }
     } catch (e) {
       print(e);
-      responseDataRequest = e.toString();
+      // responseDataRequest = e.toString();
     }
     setState(() {});
   }
 
   ///
   //
+  ///
+
+  runCamera() async {
+    print("RUN CAMERA FUN");
+
+    /// Initial Datagram Socket
+    datagramSocket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
+    //
+    Uint8List uint8list = Uint8List(16 * 1024);
+    //
+    datagramPacket = Datagram(
+        uint8list, InternetAddress(host, type: InternetAddressType.any), 6999);
+    //
+    var lastSubscribe = 0;
+    //
+    Timer.periodic(
+      const Duration(seconds: 2),
+      (timer) {
+        sendSubscribe(false);
+
+        datagramSocket.timeout(const Duration(milliseconds: 1000));
+
+        Datagram? datagram = datagramSocket.receive();
+        if (datagram != null) {
+          processPacket(datagram);
+        }
+      },
+    );
+  }
+
+  processPacket(Datagram datagram) {
+    print("processPacket ==>   "+datagram.data.toString());
+     encropt(datagram.data.toString(),keyEncepted!);
+  }
+
   ///
   @override
   Widget build(BuildContext context) {
@@ -310,9 +352,9 @@ print(fromByte.array);
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            // Text(
-            //   responseDataRequest,
-            // ),
+            Text(
+              responseDataRequest,
+            ),
             Text(
               '$_counter',
               style: Theme.of(context).textTheme.headline4,
@@ -336,7 +378,7 @@ class UdpConstants {
   static ByteData PACKET_NO_AUDIO = ByteData(0x2F);
   static ByteData PACKET_JPEG_V2 = ByteData(0x34);
   static ByteData PACKET_NO_VIDEO = ByteData(0x3F);
-  static ByteData PACKET_ENCRYPTION_TYPE_1 = ByteData(0xE1);
+  static ByteData PACKET_ENCRYPTION_TYPE_1 = ByteData(0xE1); //225
   static ByteData FLAG_STATE = ByteData(1);
   static ByteData FLAG_AUDIO = ByteData(2);
   static ByteData FLAG_VIDEO = ByteData(4);
