@@ -16,7 +16,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_sodium/flutter_sodium.dart';
 import 'encrpit_ata.dart';
-
+import 'dart:math' as Math;
 void main() {
   runApp(const MyApp());
 }
@@ -63,97 +63,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void _incrementCounter() async {
     //  datagramSocket = DatagramSocket.;
     requestLiveInfo();
-
-    // datagramSocket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
-    // setState(() {
-    //   _counter++;
-    // });
-    // print("000");
-    // Uint8List uint8list = Uint8List(16 * 1024);
-    // print("111");
-    //
-    // datagramPacket = Datagram(
-    //     uint8list, InternetAddress(host, type: InternetAddressType.any), 6999);
-    //
-    // print("222");
-    //
-    // print(await datagramPacket!.address.reverse());
-    // var lastSubscribe = 0;
-    //
-    // Timer.periodic(const Duration(seconds: 2), (timer) {
-    //   ByteData subscribe = ByteData(0);
-    //   String subscribeString = subscribe.toString();
-    //   var videoType = UdpConstants.PACKET_NO_VIDEO;
-    //   var audioType = UdpConstants.PACKET_NO_AUDIO;
-    //   subscribe = UdpConstants.FLAG_STATE;
-    //   ByteBuffer bb = ByteBuffer(capacity: 128);
-    //   // BytesBuilder bb = BytesBuilder.allocate(128);
-    //
-    //   // bb.addByte(UdpConstants.PACKET_SUBSCRIBE.buffer.asInt32List()[0]);
-    //   bb.addByte(UdpConstants.PACKET_SUBSCRIBE.buffer.lengthInBytes);
-    //   bb.addByte((subscribeSeq >> 16));
-    //   bb.addByte((subscribeSeq >> 8));
-    //   bb.addByte(subscribeSeq);
-    //   List<int> session = sessionId!.codeUnits;
-    //
-    //   bb.addByte(session.length);
-    //   bb.append(session);
-    //   bb.addByte(5);
-    //   bb.addByte(25);
-    //   bb.addByte(47);
-    //
-    //   subscribeSeq++;
-    //
-    //   // datagramSocket.receive();
-    //
-    //   final d = datagramSocket.send(bb.getData(), InternetAddress(host), port);
-    //   print("SEND SEND $d");
-    //
-    //   requestedFlags = subscribe.buffer.lengthInBytes;
-    //
-    //   // if (lastSubscribe + (currentFlags == requestedFlags ? 15000 : 500) <
-    //   //     DateTime.now().millisecond) {
-    //   //   print("Inside IFF");
-    //   //   lastSubscribe = DateTime.now().millisecond;
-    //   //   sendSubscribe(false);
-    //   // }
-    //   datagramSocket.timeout(const Duration(milliseconds: 1000));
-    //   Datagram? datagram = datagramSocket.receive();
-    //   print(datagram);
-    //   if (datagram != null) {
-    //     print("DATA IS NOT NULL ");
-    //     print(datagram.data.toString());
-    //     String v = String.fromCharCodes(datagram.data);
-    //     print(v);
-    //
-    //     String dd = encropt(v, keyEncepted!);
-    //     print(dd);
-    //   }
-    // });
   }
-
-/*
-  void _incrementCounter() async {
-    String session = "2TTB9vduqaYbPJ754170";
-   List<int> sessionListIntCodeUnits =  session.codeUnits;
-
-
-    Uint8List uint8list =Uint8List.fromList(sessionListIntCodeUnits);
-    // final bytes = Uint8List.fromList([0x80, 01, 02, 0xff, 0xA1, 30, 10, 20, 77]);
-    final str1 = ByteUtil.toReadable(uint8list,radix:Radix.dec );
-    final str2 = ByteUtil.toBase64(uint8list);
-    final str3 = ByteUtil.clone(uint8list);
-    // final str1 = ByteUtil.toReadable(uint8list);
-    print(str1);
-    print(str2);
-    print(str3);
-    ByteArray byteArray1 =ByteArray.combine1(uint8list, -1);
-    ByteArray fromByte =ByteArray.fromByte(20);
-print(byteArray1.bytes.buffer.lengthInBytes);
-print(fromByte.array);
-
-
-  }*/
 
   int subscribeSeq = 0;
 
@@ -164,6 +74,7 @@ print(fromByte.array);
     var videoType = UdpConstants.PACKET_NO_VIDEO;
     var audioType = UdpConstants.PACKET_NO_AUDIO;
     subscribe = UdpConstants.FLAG_STATE;
+
     ByteBuffer bb = ByteBuffer(capacity: 128);
     bb.addByte(UdpConstants.PACKET_SUBSCRIBE.buffer.lengthInBytes);
     bb.addByte((subscribeSeq >> 16));
@@ -173,9 +84,9 @@ print(fromByte.array);
 
     bb.addByte(session.length);
     bb.append(session);
-    bb.addByte(5);
-    bb.addByte(25);
-    bb.addByte(47);
+    bb.addByte(4); // flag vedio
+    bb.addByte(52); // videoType
+    bb.addByte(47); // audioType
 
     subscribeSeq++;
     sendPacket(bb.getData());
@@ -206,7 +117,7 @@ print(fromByte.array);
   requestLiveInfo() async {
     responseDataRequest = "Waiting ......";
     setState(() {});
-    String token = "Bearer dd0d245d8614b2c9fffff6cea355398d2a63f4ce9734668e707827949608913f";
+    String token = "Bearer a5aa49e265d423d8c03a53440115c2f40af6394c8f507d93ceec306c9521ddbc";
 
     String liveInfoApi = "https://api.doorbird.io/live/info";
 
@@ -283,70 +194,33 @@ print(fromByte.array);
     print(" nonce ==>>   $nonce");
     print(" key ==>>   $key");
     dataAfterIncrypt = HelperIncreptionUsingSodiom.decrypt(cipherText: cipherText, nonce: nonce, key: key);
+    setState(() {
+
+    });
     // }catch(e){
     //   log(e.toString(),error: "Error Process",name: "Error In Process Packet ");
     // }
 
     if (dataAfterIncrypt != null) {
-      print("dataAfterIncrypt ==>>>     $dataAfterIncrypt");
-      dataLength = dataAfterIncrypt!.length ;
-      print("dataLengthNew ==>>    $dataLength");
-      int seq = ((dataAfterIncrypt![1] & 0xff) << 16) | ((dataAfterIncrypt![2] & 0xff) << 8) | ((dataAfterIncrypt![3] & 0xff));
+      log("dataAfterIncrypt ==>>>     $dataAfterIncrypt");
+      dataLength = dataAfterIncrypt!.length;
+      log("dataLengthNew ==>>    $dataLength");
+      int seq = ((dataAfterIncrypt![1] & 0xff) << 16) |
+          ((dataAfterIncrypt![2] & 0xff) << 8) |
+          ((dataAfterIncrypt![3] & 0xff));
       print("seq ===>>>    $seq");
 
+
+      // imageProvider =MemoryImage(dataAfterIncrypt!);
+      // imageProvider.
     }
   }
 
-  // List<int>    toBytes(List<int>  bytes, int from, int amount) {
-  //     List.copyRange(bytes, from, mIdBytes, 2);
-  //     return Arrays.copyOfRange(bytes, from, from + amount);
-  // }
 
+  ByteBuffer ?buffer ;
   ///
-  _tttteeessst() async {
-    // Uint8List decrypt(Uint8List cipherText, Uint8List nonce, Uint8List key,
-    //     {Uint8List? additionalData}) =>
-
-    print("keyEncepted!.codeUnits ==>     " + "b5ecb888447f16e27df6fce07e91ebd5".codeUnits.toString());
-    print(AsciiEncoder().convert("b5ecb888447f16e27df6fce07e91ebd5"));
-
-    final das = AsciiCodec().encode("b5ecb888447f16e27df6fce07e91ebd5");
-    print("das das das das ===>>>     $das");
-    try {
-      Uint8List dd = ChaCha20Poly1305.decrypt(
-          // null,
-          toUnit8List([
-            -38,
-            -93,
-            -63,
-            64,
-            -79,
-            -93,
-            73,
-            48,
-            -68,
-            -38,
-            10,
-            99,
-            -113,
-            -113,
-            56,
-            -88,
-            -7,
-            -107,
-            -66,
-            -106,
-            110,
-            -53
-          ]),
-          toUnit8List([2, -107, 107, -92, -18, -77, 3, -108]),
-          AsciiEncoder().convert("b5ecb888447f16e27df6fce07e91ebd5"));
-      print("dd dd dd ====>>>>    $dd");
-    } catch (e) {
-      print("hhezn  ==###     $e");
-    }
-  }
-
+  // ImageProvider ? imageProvider ;
+  // AssetBundle ?assetBundle ;
   Uint8List toUnit8List(List<int> data) {
     return Uint8List.fromList(data);
   }
@@ -372,7 +246,12 @@ print(fromByte.array);
               '$_counter',
               style: Theme.of(context).textTheme.headline4,
             ),
-             Expanded(child: Image.memory(Uint8List.fromList([ 0,  0, 5,5,17]),fit: BoxFit.cover,))
+            dataAfterIncrypt == null
+                ? SizedBox()
+                :
+            Expanded(
+              child: Image.memory(Uint8List.view(dataAfterIncrypt!.buffer,dataAfterIncrypt!.length, Math.min(dataAfterIncrypt!.buffer.lengthInBytes, 256)))
+            )
           ],
         ),
       ),
@@ -385,11 +264,6 @@ print(fromByte.array);
             child: const Icon(Icons.add),
           ),
           //
-          FloatingActionButton(
-            onPressed: _tttteeessst,
-            tooltip: 'encript',
-            child: const Icon(Icons.energy_savings_leaf),
-          ),
         ],
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
@@ -413,12 +287,542 @@ class UdpConstants {
 
 class HelperIncreptionUsingSodiom {
   static Uint8List decrypt(
-           {required Uint8List cipherText, required Uint8List nonce, required Uint8List key}) =>
-      Sodium.cryptoAeadChacha20poly1305Decrypt(
-          null, cipherText, null, nonce, key);
+          {required Uint8List cipherText, required Uint8List nonce, required Uint8List key}) =>
+      Sodium.cryptoAeadChacha20poly1305Decrypt(null, cipherText, null, nonce, key);
 
-
-  // static Uint8List decrypt(
-  //         {required Uint8List cipherText, required Uint8List nonce, required Uint8List key}) =>
-  //     ChaCha20Poly1305.decrypt(cipherText, nonce, key);
+// static Uint8List decrypt(
+//         {required Uint8List cipherText, required Uint8List nonce, required Uint8List key}) =>
+//     ChaCha20Poly1305.decrypt(cipherText, nonce, key);
 }
+
+// Uint8List
+Uint8List fakdata = Uint8List.fromList(
+    [
+  52,
+  0,
+  0,
+  26,
+  0,
+  4,
+  0,
+  0,
+  117,
+  107,
+  0,
+  0,
+  80,
+  0,
+  100,
+  255,
+  0,
+  11,
+  99,
+  34,
+  167,
+  228,
+  30,
+  180,
+  249,
+  172,
+  28,
+  183,
+  46,
+  125,
+  165,
+  15,
+  31,
+  55,
+  226,
+  180,
+  11,
+  132,
+  35,
+  141,
+  216,
+  247,
+  21,
+  79,
+  105,
+  35,
+  25,
+  34,
+  156,
+  1,
+  219,
+  193,
+  163,
+  156,
+  92,
+  165,
+  147,
+  112,
+  158,
+  167,
+  30,
+  184,
+  165,
+  19,
+  166,
+  57,
+  207,
+  229,
+  85,
+  176,
+  77,
+  1,
+  79,
+  78,
+  212,
+  115,
+  7,
+  41,
+  103,
+  237,
+  49,
+  142,
+  187,
+  255,
+  0,
+  239,
+  154,
+  62,
+  209,
+  31,
+  125,
+  223,
+  149,
+  85,
+  216,
+  79,
+  52,
+  187,
+  125,
+  232,
+  230,
+  14,
+  82,
+  208,
+  157,
+  9,
+  227,
+  119,
+  229,
+  64,
+  187,
+  65,
+  252,
+  45,
+  85,
+  177,
+  129,
+  72,
+  87,
+  60,
+  18,
+  115,
+  79,
+  152,
+  92,
+  132,
+  87,
+  51,
+  135,
+  190,
+  223,
+  128,
+  3,
+  32,
+  29,
+  125,
+  51,
+  75,
+  188,
+  250,
+  84,
+  18,
+  194,
+  177,
+  76,
+  178,
+  18,
+  204,
+  15,
+  12,
+  73,
+  206,
+  61,
+  13,
+  88,
+  219,
+  142,
+  104,
+  184,
+  52,
+  33,
+  60,
+  14,
+  51,
+  81,
+  146,
+  119,
+  100,
+  14,
+  106,
+  109,
+  188,
+  211,
+  25,
+  126,
+  108,
+  98,
+  166,
+  224,
+  51,
+  36,
+  140,
+  142,
+  41,
+  57,
+  61,
+  13,
+  73,
+  143,
+  206,
+  157,
+  180,
+  83,
+  184,
+  16,
+  245,
+  235,
+  156,
+  83,
+  89,
+  79,
+  189,
+  79,
+  142,
+  59,
+  82,
+  98,
+  154,
+  2,
+  2,
+  184,
+  237,
+  72,
+  20,
+  131,
+  156,
+  26,
+  176,
+  84,
+  28,
+  224,
+  82,
+  109,
+  226,
+  128,
+  34,
+  231,
+  186,
+  226,
+  141,
+  167,
+  112,
+  28,
+  116,
+  38,
+  165,
+  192,
+  201,
+  197,
+  1,
+  126,
+  111,
+  165,
+  49,
+  17,
+  52,
+  126,
+  244,
+  207,
+  43,
+  39,
+  138,
+  177,
+  140,
+  81,
+  182,
+  128,
+  34,
+  82,
+  84,
+  124,
+  235,
+  145,
+  235,
+  82,
+  163,
+  2,
+  50,
+  167,
+  34,
+  141,
+  191,
+  133,
+  48,
+  168,
+  254,
+  18,
+  65,
+  170,
+  189,
+  132,
+  209,
+  56,
+  52,
+  224,
+  112,
+  61,
+  42,
+  1,
+  38,
+  15,
+  204,
+  63,
+  30,
+  213,
+  32,
+  108,
+  140,
+  102,
+  168,
+  150,
+  74,
+  13,
+  25,
+  244,
+  237,
+  81,
+  228,
+  19,
+  214,
+  151,
+  56,
+  166,
+  0,
+  204,
+  118,
+  251,
+  98,
+  144,
+  2,
+  41,
+  9,
+  221,
+  197,
+  61,
+  84,
+  158,
+  245,
+  44,
+  104,
+  112,
+  4,
+  228,
+  116,
+  160,
+  140,
+  100,
+  245,
+  165,
+  80,
+  105,
+  197,
+  112,
+  14,
+  7,
+  106,
+  0,
+  135,
+  24,
+  235,
+  214,
+  151,
+  25,
+  250,
+  211,
+  202,
+  228,
+  82,
+  109,
+  230,
+  152,
+  27,
+  58,
+  66,
+  236,
+  209,
+  102,
+  124,
+  99,
+  204,
+  152,
+  143,
+  203,
+  2,
+  164,
+  81,
+  197,
+  62,
+  213,
+  54,
+  104,
+  22,
+  139,
+  131,
+  153,
+  9,
+  115,
+  248,
+  146,
+  127,
+  173,
+  0,
+  96,
+  86,
+  177,
+  50,
+  100,
+  100,
+  86,
+  150,
+  157,
+  14,
+  235,
+  109,
+  199,
+  128,
+  204,
+  72,
+  254,
+  95,
+  210,
+  179,
+  200,
+  245,
+  173,
+  155,
+  21,
+  219,
+  99,
+  0,
+  61,
+  208,
+  55,
+  231,
+  207,
+  245,
+  167,
+  114,
+  30,
+  164,
+  192,
+  0,
+  48,
+  40,
+  165,
+  52,
+  148,
+  134,
+  33,
+  164,
+  61,
+  13,
+  14,
+  202,
+  131,
+  44,
+  112,
+  42,
+  148,
+  243,
+  151,
+  36,
+  14,
+  23,
+  210,
+  154,
+  66,
+  103,
+  255,
+  209,
+  226,
+  143,
+  79,
+  122,
+  74,
+  113,
+  253,
+  105,
+  42,
+  88,
+  131,
+  28,
+  82,
+  17,
+  239,
+  74,
+  9,
+  164,
+  206,
+  69,
+  33,
+  137,
+  198,
+  62,
+  149,
+  118,
+  212,
+  44,
+  182,
+  242,
+  196,
+  112,
+  114,
+  51,
+  143,
+  94,
+  199,
+  250,
+  85,
+  32,
+  13,
+  71,
+  51,
+  188,
+  72,
+  146,
+  161,
+  32,
+  171,
+  99,
+  32,
+  226,
+  128,
+  68,
+  208,
+  222,
+  221,
+  105,
+  178,
+  21,
+  134,
+  79,
+  221,
+  231,
+  152,
+  216
+],
+);
