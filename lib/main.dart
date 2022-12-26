@@ -30,15 +30,13 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyHomePage extends StatefulWidget  {
-
+class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key, required this.title}) : super(key: key);
 
   final String title;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
-
 }
 
 class _MyHomePageState extends State<MyHomePage> {
@@ -65,8 +63,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String? sessionId;
   String? keyEncepted;
 
-  Uint8List? dataAfterIncrypt;
-
+  Uint8List? dataAfterDecrypt;
 
   void _incrementCounter() async {
     //  datagramSocket = DatagramSocket.;
@@ -110,7 +107,7 @@ class _MyHomePageState extends State<MyHomePage> {
   requestLiveInfo() async {
     responseDataRequest = "Waiting ......";
     setState(() {});
-    String token = "Bearer 3a92b6dba9797139f7436b18907c1e996f9d5f2588c827a3c85722629f1ee41b";
+    String token = "Bearer c4ec86150aeb1840a2ddb79be611c8690594b9d48ba0a0b473e1e2bf1432a9c3";
 
     String liveInfoApi = "https://api.doorbird.io/live/info";
 
@@ -180,13 +177,13 @@ class _MyHomePageState extends State<MyHomePage> {
     print(" cipherText ==>>   $cipherText");
     print(" nonce ==>>   $nonce");
     print(" key ==>>   $key");
-    dataAfterIncrypt = HelperIncreptionUsingSodiom.decrypt(cipherText: cipherText, nonce: nonce, key: key);
+    dataAfterDecrypt = HelperIncreptionUsingSodiom.decrypt(cipherText: cipherText, nonce: nonce, key: key);
 
-    if (dataAfterIncrypt != null) {
-      log("dataAfterIncrypt ==>>>     $dataAfterIncrypt");
-      dataLength = dataAfterIncrypt!.length;
+    if (dataAfterDecrypt != null) {
+      log("dataAfterIncrypt ==>>>     $dataAfterDecrypt");
+      dataLength = dataAfterDecrypt!.length;
       log("dataLengthNew ==>>    $dataLength");
-      int seq = ((dataAfterIncrypt![1] & 0xff) << 16) | ((dataAfterIncrypt![2] & 0xff) << 8) | ((dataAfterIncrypt![3] & 0xff));
+      int seq = ((dataAfterDecrypt![1] & 0xff) << 16) | ((dataAfterDecrypt![2] & 0xff) << 8) | ((dataAfterDecrypt![3] & 0xff));
       print("seq ===>>>    $seq");
 
       enqueue(seq);
@@ -203,33 +200,36 @@ class _MyHomePageState extends State<MyHomePage> {
   // private BitSet vPresent = new BitSet();
   // private byte[] vData = new byte[64 * 1024];
   int vSeq = 0;
-  Uint8List vData = Uint8List(64*1024) ;
+  Uint8List vData = Uint8List(64 * 1024);
+
   Set vPresent = {};
 
   void enqueue(int seq) async {
     if (seq > vSeq) {
       vPresent.clear();
       vSeq = seq;
-      vData = Uint8List(0) ;
+      vData = Uint8List(0);
     }
     if (seq == vSeq) {
       // Position to 6 like java
-      int offset = dataAfterIncrypt!.offsetInBytes;
-      int imageLen = dataAfterIncrypt!.buffer.asByteData().getInt32(offset + 6);
-      int remaining = (dataAfterIncrypt!.buffer.asByteData().lengthInBytes / 2).toInt()  ;
-      if (vData == null || imageLen != vData.length) {
+      int offset = dataAfterDecrypt!.offsetInBytes;
+      int imageLen = dataAfterDecrypt!.buffer.asByteData().getInt32(offset + 6);
+      int remaining = dataAfterDecrypt!.buffer.asByteData().lengthInBytes ~/ 2;
+      if (vData.isEmpty || imageLen != vData.length) {
         vPresent.clear();
-        vData =  Uint8List(imageLen);
+        vData = Uint8List(imageLen);
       }
-      int imageOffset = dataAfterIncrypt!.buffer.asByteData().getInt32(offset + 6);
-      while (remaining > 0) {
-        int blockSize = Math.min(remaining , 256);
-        dataAfterIncrypt!.buffer.asByteData( imageOffset,blockSize);
-        print("NNNNN NNN N NNNN  ${dataAfterIncrypt!.buffer.asByteData( imageOffset,blockSize)}");
-        // bb.get(vData, imageOffset, blockSize);
-        // vPresent.set(imageOffset / 256);
-        // imageOffset += blockSize;
-      }
+      int imageOffset = dataAfterDecrypt!.buffer.asByteData().getInt32(offset + 6);
+      int blockSize = Math.min(remaining, 256);
+
+      // while (remaining > 0) {
+      //   Uint8List.view(dataAfterIncrypt!.buffer,blockSize);
+      //   vPresent.add(imageOffset / 256);
+      //   imageOffset += blockSize;
+      //   print(">>>>>>>>>>>>>>>   $imageOffset");
+      //   // bb.get(vData, imageOffset, blockSize);
+      //   // imageOffset += blockSize;
+      // }
 
     }
   }
@@ -262,7 +262,7 @@ class _MyHomePageState extends State<MyHomePage> {
               '$_counter',
               style: Theme.of(context).textTheme.headline4,
             ),
-            dataAfterIncrypt == null ? SizedBox() : Expanded(child: Image.memory(dataAfterIncrypt!))
+            dataAfterDecrypt == null ? SizedBox() : Expanded(child: Image.memory(Uint8List.fromList(dataAfterDecrypt!.buffer.asUint8List())))
           ],
         ),
       ),
