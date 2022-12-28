@@ -9,6 +9,8 @@ import 'package:dio/dio.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_sodium/flutter_sodium.dart';
+
+// import 'image_queue.dart';
 import 'package:untitled1_flutter/jpeg_queue.dart';
 
 void main() {
@@ -66,9 +68,10 @@ class _MyHomePageState extends State<MyHomePage>  implements ImgListener{
 
   Uint8List? dataAfterDecrypt;
 
-  void _incrementCounter() async {
-    //  datagramSocket = DatagramSocket.;
+  @override
+  void initState() {
     requestLiveInfo();
+    super.initState();
   }
 
   void sendSubscribe(bool unsubscribe) {
@@ -108,7 +111,7 @@ class _MyHomePageState extends State<MyHomePage>  implements ImgListener{
   requestLiveInfo() async {
     responseDataRequest = "Waiting ......";
     setState(() {});
-    String token = "Bearer ff96947f38af858924ec30d3026667687192c04a609e4e349a12bc273913d79a";
+    String token = "Bearer 159fdc021280b40c671725c1b299a158e0f1eb324e52e782d8a23a378eb389b9";
 
     String liveInfoApi = "https://api.doorbird.io/live/info";
 
@@ -167,9 +170,9 @@ class _MyHomePageState extends State<MyHomePage>  implements ImgListener{
   processPacket(Datagram datagram) {
     print("processPacket ==>   ${datagram.data}");
     // encropt(datagram.data.toString(), keyEncepted!);
-
     // try{
     int dataLength = datagram.data.length;
+
     Uint8List nonce = datagram.data.sublist(1, 9);
     Uint8List cipherText = datagram.data.sublist(nonce.length + 1);
     Uint8List key = toUnit8List(keyEncepted!.codeUnits);
@@ -189,7 +192,7 @@ class _MyHomePageState extends State<MyHomePage>  implements ImgListener{
       print("seq ===>>>    $seq");
 
       JpegQueue().enqueue(seq, dataAfterDecrypt, this);
-      enqueue(seq);
+      // enqueue(seq);
 
       // if (seq != 0) {
       //   setState(() {});
@@ -271,17 +274,6 @@ class _MyHomePageState extends State<MyHomePage>  implements ImgListener{
           ],
         ),
       ),
-      floatingActionButton: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          FloatingActionButton(
-            onPressed: _incrementCounter,
-            tooltip: 'Increment',
-            child: const Icon(Icons.add),
-          ),
-          //
-        ],
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 
@@ -289,6 +281,9 @@ class _MyHomePageState extends State<MyHomePage>  implements ImgListener{
   void onImageReceived(Uint8List image) {
     // TODO: implement onImageReceived
   }
+
+
+
 }
 
 class UdpConstants {
