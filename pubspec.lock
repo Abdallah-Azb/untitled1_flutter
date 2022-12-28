@@ -29,6 +29,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "3.0.32"
+  bit_array:
+    dependency: "direct main"
+    description:
+      name: bit_array
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.2.0"
   boolean_selector:
     dependency: transitive
     description:
@@ -36,6 +43,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.1.0"
+  buffer:
+    dependency: "direct main"
+    description:
+      name: buffer
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.1.1"
   byte_util:
     dependency: "direct main"
     description:

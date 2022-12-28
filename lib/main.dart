@@ -107,9 +107,10 @@ class _MyHomePageState extends State<MyHomePage> {
   requestLiveInfo() async {
     responseDataRequest = "Waiting ......";
     setState(() {});
-    String token = "Bearer c4ec86150aeb1840a2ddb79be611c8690594b9d48ba0a0b473e1e2bf1432a9c3";
+    String token = "Bearer ff96947f38af858924ec30d3026667687192c04a609e4e349a12bc273913d79a";
 
     String liveInfoApi = "https://api.doorbird.io/live/info";
+
 
     try {
       Dio dio = Dio();
@@ -214,6 +215,8 @@ class _MyHomePageState extends State<MyHomePage> {
       // Position to 6 like java
       int offset = dataAfterDecrypt!.offsetInBytes;
       int imageLen = dataAfterDecrypt!.buffer.asByteData().getInt32(offset + 6);
+
+      int pos = dataAfterDecrypt!.buffer.asByteData().getInt32(offset);
       int remaining = dataAfterDecrypt!.buffer.asByteData().lengthInBytes ~/ 2;
       if (vData.isEmpty || imageLen != vData.length) {
         vPresent.clear();
