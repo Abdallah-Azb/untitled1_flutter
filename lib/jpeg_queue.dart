@@ -14,7 +14,7 @@ class JpegQueue{
     vSeq = 0;
   }
 
-  void enqueue(int seq , ByteBuffer bb , ImgListener imgListener){
+  void enqueue(int seq , Uint8List bb , ImgListener imgListener){
 
 
      ByteDataReader reader = ByteDataReader();
@@ -27,14 +27,14 @@ class JpegQueue{
     }
 
     if(seq == vSeq){
-      reader.add(bb.asUint8List());
-      int imageLen = bb.asByteData().getInt32(reader.offsetInBytes + 6);
+      reader.add(bb);
+      int imageLen = reader.offsetInBytes+6;
 
       if (vData == null || imageLen != vData?.length) {
         vPresent.clearAll();
         vData = Uint8List(imageLen);
       }
-      int imageOffset = bb.asByteData().getInt32(reader.offsetInBytes);
+      int imageOffset = reader.offsetInBytes;
 
 
       while (reader.remainingLength > 0) {
