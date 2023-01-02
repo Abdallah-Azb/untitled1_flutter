@@ -7,17 +7,9 @@ import '../jpeg_queue.dart';
 import 'decrypt_data.dart';
 
 class ProcessPacket implements ImgListener {
-  final String? encryptKey ;
+  Uint8List? dataAfterDecrypt;
 
-  ProcessPacket(this.encryptKey);
-
-  Uint8List? dataAfterDecrypt ;
-
-  Uint8List toUnit8List(List<int> data) {
-    return Uint8List.fromList(data);
-  }
-
-  processPacket(Datagram datagram) {
+  processPacket(Datagram datagram, String? encryptKey) {
     int dataLength = datagram.data.length;
     Uint8List nonce = datagram.data.sublist(1, 9);
     Uint8List cipherText = datagram.data.sublist(nonce.length + 1);
@@ -39,12 +31,11 @@ class ProcessPacket implements ImgListener {
       log("dataAfterEncrypt ==>>>     $dataAfterDecrypt");
       log("dataLengthNew ==>>    $dataLength");
       print("seq ===>>>    $seq");
-
     }
   }
 
   @override
-  void onImageReceived(Uint8List imgData) async  {
+  void onImageReceived(Uint8List imgData) async {
     print("Image received : ${imgData.length}");
     // decode jpeg into bitmap to display it in image view
     final codec = await instantiateImageCodec(imgData);
@@ -53,6 +44,9 @@ class ProcessPacket implements ImgListener {
     // setState(() {
     //   liveIv.image = image;
     // });
-    }
-}
+  }
 
+  Uint8List toUnit8List(List<int> data) {
+    return Uint8List.fromList(data);
+  }
+}
