@@ -9,6 +9,7 @@ import 'package:dio/dio.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_sodium/flutter_sodium.dart';
+import 'package:untitled1_flutter/audio_queue.dart';
 import 'package:untitled1_flutter/jpeg_queue.dart';
 
 void main() {
@@ -40,7 +41,7 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage>  implements ImgListener{
+class _MyHomePageState extends State<MyHomePage>  implements ImgListener , AudioListener{
   int _counter = 0;
 
   // final String host = "apiorun.doorbird.net";
@@ -65,6 +66,7 @@ class _MyHomePageState extends State<MyHomePage>  implements ImgListener{
   String? keyEncepted;
 
   Uint8List? dataAfterDecrypt;
+
 
   void _incrementCounter() async {
     //  datagramSocket = DatagramSocket.;
@@ -188,7 +190,7 @@ class _MyHomePageState extends State<MyHomePage>  implements ImgListener{
       int seq = ((dataAfterDecrypt![1] & 0xff) << 16) | ((dataAfterDecrypt![2] & 0xff) << 8) | ((dataAfterDecrypt![3] & 0xff));
       print("seq ===>>>    $seq");
 
-      JpegQueue().enqueue(seq, dataAfterDecrypt, this);
+      JpegQueue().enqueue(seq, dataAfterDecrypt!, this);
       enqueue(seq);
 
       // if (seq != 0) {
@@ -288,6 +290,11 @@ class _MyHomePageState extends State<MyHomePage>  implements ImgListener{
   @override
   void onImageReceived(Uint8List image) {
     // TODO: implement onImageReceived
+  }
+
+  @override
+  void onAudioReceived(List<int> audio) {
+    // TODO: implement onAudioReceived
   }
 }
 
