@@ -3,9 +3,8 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 
-import 'package:flutter_sodium/flutter_sodium.dart';
-
-import 'jpeg_queue.dart';
+import '../jpeg_queue.dart';
+import 'decrypt_data.dart';
 
 class ProcessPacket implements ImgListener {
   final String? encryptKey ;
@@ -57,7 +56,3 @@ class ProcessPacket implements ImgListener {
     }
 }
 
-class HelperDecryptionUsingSodium {
-  static Uint8List decrypt({required Uint8List cipherText, required Uint8List nonce, required Uint8List key}) =>
-      Sodium.cryptoAeadChacha20poly1305Decrypt(null, cipherText, null, nonce, key);
-}
