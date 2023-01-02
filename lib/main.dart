@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_sodium/flutter_sodium.dart';
 import 'package:untitled1_flutter/audio_queue.dart';
 import 'package:untitled1_flutter/jpeg_queue.dart';
+import 'package:untitled1_flutter/socket_connect_send_receive.dart';
 // import 'package:image/image.dart';
 
 import 'image_load.dart';
@@ -24,8 +25,10 @@ void main() {
 
   runApp(const MyApp());
 }
+
 //
 String token = "Bearer 4495e7fb983d031e194120efb33840487eb8faf71c31eac69ad752ee3fc38986";
+
 //
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -52,7 +55,7 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage>  implements ImgListener , AudioListener{
+class _MyHomePageState extends State<MyHomePage> implements ImgListener, AudioListener {
   int _counter = 0;
 
   // final String host = "apiorun.doorbird.net";
@@ -77,7 +80,6 @@ class _MyHomePageState extends State<MyHomePage>  implements ImgListener , Audio
   String? keyEncepted;
 
   Uint8List? dataAfterDecrypt;
-
 
   void _incrementCounter() async {
     requestLiveInfo();
@@ -108,7 +110,6 @@ class _MyHomePageState extends State<MyHomePage>  implements ImgListener , Audio
     sendPacket(bb.getData());
 
     requestedFlags = 5;
-
   }
 
   ///
@@ -125,7 +126,6 @@ class _MyHomePageState extends State<MyHomePage>  implements ImgListener , Audio
     String token = "Bearer ff96947f38af858924ec30d3026667687192c04a609e4e349a12bc273913d79a";
 
     String liveInfoApi = "https://api.doorbird.io/live/info";
-
 
     try {
       Dio dio = Dio();
@@ -167,13 +167,14 @@ class _MyHomePageState extends State<MyHomePage>  implements ImgListener , Audio
     Timer.periodic(
       const Duration(seconds: 2),
       (timer) {
-
-        if (lastSubscribe + (currentFlags == requestedFlags ? 15000 : 500) < DateTime.now().millisecondsSinceEpoch) {
-          print("====  DateTime.now().millisecondsSinceEpoch =====     "+  DateTime.now().millisecondsSinceEpoch.toString());
-          lastSubscribe =  DateTime.now().millisecondsSinceEpoch;
+        if (lastSubscribe + (currentFlags == requestedFlags ? 15000 : 500) <
+            DateTime.now().millisecondsSinceEpoch) {
+          print("====  DateTime.now().millisecondsSinceEpoch =====     " +
+              DateTime.now().millisecondsSinceEpoch.toString());
+          lastSubscribe = DateTime.now().millisecondsSinceEpoch;
           sendSubscribe(false);
         }
-      //  sendSubscribe(false);
+        //  sendSubscribe(false);
 
         datagramSocket.timeout(const Duration(milliseconds: 1000));
 
@@ -187,94 +188,92 @@ class _MyHomePageState extends State<MyHomePage>  implements ImgListener , Audio
 
   // Uint8List? imageeeee = Uint8List(64 * 1024);
 
-
-
   processPacket(Datagram datagram) {
     // Uint8List packetData =  datagram.data ;
-    ByteArray packetData = ByteArray(datagram.data)  ;
-    int dataLength = datagram.data.length ;
+    ByteArray packetData = ByteArray(datagram.data);
+    int dataLength = datagram.data.length;
 
-    Byte type = packetData.array.first ;
+    Byte type = packetData.array.first;
 
-    ByteArray ? data ;
+    ByteArray? data;
     // print("== type00 ===     $type"  ) ;
     // print("== type value00 ===     ${type.value}"  ) ;
-    if(type.value == UdpConstants.PACKET_ENCRYPTION_TYPE_1.value){ // 225  &-OR-& -31
+    if (type.value == UdpConstants.PACKET_ENCRYPTION_TYPE_1.value) {
+      // 225  &-OR-& -31
       // decrypt the data before handling them
-      ByteArray nonce =  ByteArray(packetData.bytes.sublist(1,9));
-      ByteArray encryptedData =  ByteArray(packetData.bytes.sublist(nonce.array.length+1));
-      ByteArray key =  ByteArray(toUnit8List(keyEncepted!.codeUnits));
+      ByteArray nonce = ByteArray(packetData.bytes.sublist(1, 9));
+      ByteArray encryptedData = ByteArray(packetData.bytes.sublist(nonce.array.length + 1));
+      ByteArray key = ByteArray(toUnit8List(keyEncepted!.codeUnits));
 
-      print("== nonce ===     $nonce"  ) ;
-      print("== nonce array ===     ${nonce.array}"  ) ;
-      print("== nonce array length ===     ${nonce.array.length}"  ) ;
-      print("== nonce bytes===     ${nonce.bytes}"  ) ;
-      print("== nonce bytes length===     ${nonce.bytes.length}"  ) ;
-      print("== nonce bytes lengthInBytes ===     ${nonce.bytes.lengthInBytes}"  ) ;
-      print("== nonce bytes offsetInBytes ===     ${nonce.bytes.offsetInBytes}"  ) ;
-      print("== nonce bytes buffer ===     ${nonce.bytes.buffer}"  ) ;
+      print("== nonce ===     $nonce");
+      print("== nonce array ===     ${nonce.array}");
+      print("== nonce array length ===     ${nonce.array.length}");
+      print("== nonce bytes===     ${nonce.bytes}");
+      print("== nonce bytes length===     ${nonce.bytes.length}");
+      print("== nonce bytes lengthInBytes ===     ${nonce.bytes.lengthInBytes}");
+      print("== nonce bytes offsetInBytes ===     ${nonce.bytes.offsetInBytes}");
+      print("== nonce bytes buffer ===     ${nonce.bytes.buffer}");
       print("========================================================");
       print("========================================================");
-      print("== encryptedData ===     $encryptedData"  ) ;
-      print("== encryptedData array ===     ${encryptedData.array}"  ) ;
-      print("== encryptedData array length ===     ${encryptedData.array.length}"  ) ;
-      print("== encryptedData bytes===     ${encryptedData.bytes}"  ) ;
-      print("== encryptedData bytes length===     ${encryptedData.bytes.length}"  ) ;
-      print("== encryptedData bytes lengthInBytes ===     ${encryptedData.bytes.lengthInBytes}"  ) ;
-      print("== encryptedData bytes offsetInBytes ===     ${encryptedData.bytes.offsetInBytes}"  ) ;
-      print("== encryptedData bytes buffer ===     ${encryptedData.bytes.buffer}"  ) ;
-      print("== key ===     $key"  ) ;
+      print("== encryptedData ===     $encryptedData");
+      print("== encryptedData array ===     ${encryptedData.array}");
+      print("== encryptedData array length ===     ${encryptedData.array.length}");
+      print("== encryptedData bytes===     ${encryptedData.bytes}");
+      print("== encryptedData bytes length===     ${encryptedData.bytes.length}");
+      print("== encryptedData bytes lengthInBytes ===     ${encryptedData.bytes.lengthInBytes}");
+      print("== encryptedData bytes offsetInBytes ===     ${encryptedData.bytes.offsetInBytes}");
+      print("== encryptedData bytes buffer ===     ${encryptedData.bytes.buffer}");
+      print("== key ===     $key");
 
-
-      try{
-        data = ByteArray(toUnit8List(HelperIncreptionUsingSodiom.decrypt(cipherText: encryptedData.bytes, nonce: nonce.bytes, key: key.bytes)));
-      }catch(e){
-        print("== Catch Error in Decrypt Data In Sodiom") ;
+      try {
+        data = ByteArray(toUnit8List(HelperIncreptionUsingSodiom.decrypt(
+            cipherText: encryptedData.bytes, nonce: nonce.bytes, key: key.bytes)));
+      } catch (e) {
+        print("== Catch Error in Decrypt Data In Sodiom");
       }
 
-      if(data != null ){
+      if (data != null) {
         dataLength = data.array.length;
-        type = data.array.first ;
-        int seq = ((data.array[1].value & 0xff) << 16) | ((data.array[2].value & 0xff) << 8) | ((data.array[3].value & 0xff));
-        Byte state =  data.array[4] ;
+        type = data.array.first;
+        int seq = ((data.array[1].value & 0xff) << 16) |
+            ((data.array[2].value & 0xff) << 8) |
+            ((data.array[3].value & 0xff));
+        Byte state = data.array[4];
         int flags = data.array[5].value;
-
 
         print("========================================================");
         print("========================================================");
         // print("== data ===     $data"  ) ;
-        print("== data array===     ${data.array}"  ) ;
-        print("== data array length ===     ${data.array.length}"  ) ;
-        print("== data bytes===     ${data.bytes}"  ) ;
-        print("== data bytes buffer===     ${data.bytes.buffer}"  ) ;
-        print("== data bytes length===     ${data.bytes.length}"  ) ;
+        print("== data array===     ${data.array}");
+        print("== data array length ===     ${data.array.length}");
+        print("== data bytes===     ${data.bytes}");
+        print("== data bytes buffer===     ${data.bytes.buffer}");
+        print("== data bytes length===     ${data.bytes.length}");
         print("========================================================");
         print("========================================================");
-        print("== type ===     $type"  ) ;
-        print("== type value ===     ${type.value}"  ) ;
+        print("== type ===     $type");
+        print("== type value ===     ${type.value}");
         print("========================================================");
         print("========================================================");
-        print("== seq ===     $seq"  ) ;
+        print("== seq ===     $seq");
         print("========================================================");
         print("========================================================");
-        print("== state ===     $state"  ) ;
-        print("== state value ===     ${state.value}"  ) ;
+        print("== state ===     $state");
+        print("== state value ===     ${state.value}");
         print("========================================================");
         print("========================================================");
-        print("== flags ===     $flags"  ) ;
+        print("== flags ===     $flags");
 
         /// Image
-        if(type.value == UdpConstants.PACKET_JPEG_V2.value){ // 52
+        if (type.value == UdpConstants.PACKET_JPEG_V2.value) {
+          // 52
 
           // JpegQueue.enqueue(seq, data,dataLength);
         }
-
       }
-
     }
 
-
-   /* ///
+    /* ///
     print("processPacket ==>   ${datagram.data}");
     // encropt(datagram.data.toString(), keyEncepted!);
 
@@ -306,7 +305,7 @@ print("imageLen ==>>   $imageLen");
 print("remaining ==>>   $remaining");
 print("offset ==>>   $offset");
 
-      *//*if(seq > vSeq){
+      */ /*if(seq > vSeq){
         imageeeee = null ;
         vPresent.clearAll() ;
         vSeq = seq;
@@ -318,7 +317,7 @@ print("offset ==>>   $offset");
 
 
 
-      }*//*
+      }*/ /*
 
       setState(() {});
     }*/
@@ -328,8 +327,7 @@ print("offset ==>>   $offset");
 
   int vSeq = 0;
 
-  Set<Byte> vPresent =<Byte>{};
-
+  Set<Byte> vPresent = <Byte>{};
 
 /*
   imageEnqueue (Uint8List data , int length,int seq){
@@ -354,8 +352,6 @@ print("offset ==>>   $offset");
 */
 
   ///
-
-
 
   ///
   Uint8List toUnit8List(List<int> data) {
@@ -384,7 +380,7 @@ print("offset ==>>   $offset");
               style: Theme.of(context).textTheme.headline4,
             ),
             // imageeeee == null ? SizedBox() : Expanded(child: Image.memory(Uint8List.fromList(imageeeee!)))
-      //    Expanded(child: Image.memory(Uint8List.fromList(fakwDataImage))),
+            //    Expanded(child: Image.memory(Uint8List.fromList(fakwDataImage))),
           ],
         ),
       ),
@@ -393,9 +389,18 @@ print("offset ==>>   $offset");
         children: [
           FloatingActionButton(
             // onPressed: _incrementCounter,
-            onPressed: (){
+            onPressed: () async {
               NetworkHelper networkHelper = NetworkHelper();
-              networkHelper.getInfo();
+              ResponseGetInfo? responseGetInfo = await networkHelper.getInfo();
+              if (responseGetInfo != null) {
+                SocketConnectHelper socketConnectHelper = SocketConnectHelper(
+                    host: responseGetInfo.host,
+                    port: int.parse(responseGetInfo.port.toString()),
+                    sessionId: responseGetInfo.sessionId,
+                    keyEncepted: responseGetInfo.key);
+
+                socketConnectHelper.connect();
+              }
             },
             tooltip: 'Increment',
             child: const Icon(Icons.add),
@@ -418,14 +423,12 @@ print("offset ==>>   $offset");
 }
 //
 
-
 ///
-
 
 //
 class UdpConstants {
   static ByteData PACKET_SUBSCRIBE = ByteData(0x01);
-  static   Byte PACKET_STATE_CHANGE =  Byte(0x11); //17
+  static Byte PACKET_STATE_CHANGE = Byte(0x11); //17
   static Byte PACKET_ULAW = Byte(0x21); // 33
   static Byte PACKET_NO_AUDIO = Byte(0x2F);
   static Byte PACKET_JPEG_V2 = Byte(0x34); // 52
@@ -446,10 +449,7 @@ class HelperIncreptionUsingSodiom {
   static Uint8List decrypt(
           {required Uint8List cipherText, required Uint8List nonce, required Uint8List key}) =>
       Sodium.cryptoAeadChacha20poly1305Decrypt(null, cipherText, null, nonce, key);
-
 }
-
-
 
 /*
 processPacket(Datagram datagram) {
@@ -498,7 +498,7 @@ processPacket(Datagram datagram) {
 
 
 
-      }*//*
+      }*/ /*
 
 
     setState(() {});
@@ -544,8 +544,517 @@ processPacket(Datagram datagram) {
 
 */
 
-
-
-List<int> fakwDataImage =
-
-[-1, -40, -1, -32, 0, 16, 74, 70, 73, 70, 0, 1, 2, 1, 0, 96, 0, 96, 0, 0, -1, -37, 0, -124, 0, 13, 9, 10, 11, 10, 8, 13, 11, 10, 11, 14, 14, 13, 15, 19, 32, 21, 19, 18, 18, 19, 39, 28, 30, 23, 32, 46, 41, 49, 48, 46, 41, 45, 44, 51, 58, 74, 62, 51, 54, 70, 55, 44, 45, 64, 87, 65, 70, 76, 78, 82, 83, 82, 50, 62, 90, 97, 90, 80, 96, 74, 81, 82, 79, 1, 14, 14, 14, 19, 17, 19, 38, 21, 21, 38, 79, 53, 45, 53, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, -1, -60, 1, -94, 0, 0, 1, 5, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 1, 0, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16, 0, 2, 1, 3, 3, 2, 4, 3, 5, 5, 4, 4, 0, 0, 1, 125, 1, 2, 3, 0, 4, 17, 5, 18, 33, 49, 65, 6, 19, 81, 97, 7, 34, 113, 20, 50, -127, -111, -95, 8, 35, 66, -79, -63, 21, 82, -47, -16, 36, 51, 98, 114, -126, 9, 10, 22, 23, 24, 25, 26, 37, 38, 39, 40, 41, 42, 52, 53, 54, 55, 56, 57, 58, 67, 68, 69, 70, 71, 72, 73, 74, 83, 84, 85, 86, 87, 88, 89, 90, 99, 100, 101, 102, 103, 104, 105, 106, 115, 116, 117, 118, 119, 120, 121, 122, -125, -124, -123, -122, -121, -120, -119, -118, -110, -109, -108, -107, -106, -105, -104, -103, -102, -94, -93, -92, -91, -90, -89, -88, -87, -86, -78, -77, -76, -75, -74, -73, -72, -71, -70, -62, -61, -60, -59, -58, -57, -56, -55, -54, -46, -45, -44, -43, -42, -41, -40, -39, -38, -31, -30, -29, -28, -27, -26, -25, -24, -23, -22, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, 17, 0, 2, 1, 2, 4, 4, 3, 4, 7, 5, 4, 4, 0, 1, 2, 119, 0, 1, 2, 3, 17, 4, 5, 33, 49, 6, 18, 65, 81, 7, 97, 113, 19, 34, 50, -127, 8, 20, 66, -111, -95, -79, -63, 9, 35, 51, 82, -16, 21, 98, 114, -47, 10, 22, 36, 52, -31, 37, -15, 23, 24, 25, 26, 38, 39, 40, 41, 42, 53, 54, 55, 56, 57, 58, 67, 68, 69, 70, 71, 72, 73, 74, 83, 84, 85, 86, 87, 88, 89, 90, 99, 100, 101, 102, 103, 104, 105, 106, 115, 116, 117, 118, 119, 120, 121, 122, -126, -125, -124, -123, -122, -121, -120, -119, -118, -110];
+List<int> fakwDataImage = [
+  -1,
+  -40,
+  -1,
+  -32,
+  0,
+  16,
+  74,
+  70,
+  73,
+  70,
+  0,
+  1,
+  2,
+  1,
+  0,
+  96,
+  0,
+  96,
+  0,
+  0,
+  -1,
+  -37,
+  0,
+  -124,
+  0,
+  13,
+  9,
+  10,
+  11,
+  10,
+  8,
+  13,
+  11,
+  10,
+  11,
+  14,
+  14,
+  13,
+  15,
+  19,
+  32,
+  21,
+  19,
+  18,
+  18,
+  19,
+  39,
+  28,
+  30,
+  23,
+  32,
+  46,
+  41,
+  49,
+  48,
+  46,
+  41,
+  45,
+  44,
+  51,
+  58,
+  74,
+  62,
+  51,
+  54,
+  70,
+  55,
+  44,
+  45,
+  64,
+  87,
+  65,
+  70,
+  76,
+  78,
+  82,
+  83,
+  82,
+  50,
+  62,
+  90,
+  97,
+  90,
+  80,
+  96,
+  74,
+  81,
+  82,
+  79,
+  1,
+  14,
+  14,
+  14,
+  19,
+  17,
+  19,
+  38,
+  21,
+  21,
+  38,
+  79,
+  53,
+  45,
+  53,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  79,
+  -1,
+  -60,
+  1,
+  -94,
+  0,
+  0,
+  1,
+  5,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  1,
+  0,
+  3,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  16,
+  0,
+  2,
+  1,
+  3,
+  3,
+  2,
+  4,
+  3,
+  5,
+  5,
+  4,
+  4,
+  0,
+  0,
+  1,
+  125,
+  1,
+  2,
+  3,
+  0,
+  4,
+  17,
+  5,
+  18,
+  33,
+  49,
+  65,
+  6,
+  19,
+  81,
+  97,
+  7,
+  34,
+  113,
+  20,
+  50,
+  -127,
+  -111,
+  -95,
+  8,
+  35,
+  66,
+  -79,
+  -63,
+  21,
+  82,
+  -47,
+  -16,
+  36,
+  51,
+  98,
+  114,
+  -126,
+  9,
+  10,
+  22,
+  23,
+  24,
+  25,
+  26,
+  37,
+  38,
+  39,
+  40,
+  41,
+  42,
+  52,
+  53,
+  54,
+  55,
+  56,
+  57,
+  58,
+  67,
+  68,
+  69,
+  70,
+  71,
+  72,
+  73,
+  74,
+  83,
+  84,
+  85,
+  86,
+  87,
+  88,
+  89,
+  90,
+  99,
+  100,
+  101,
+  102,
+  103,
+  104,
+  105,
+  106,
+  115,
+  116,
+  117,
+  118,
+  119,
+  120,
+  121,
+  122,
+  -125,
+  -124,
+  -123,
+  -122,
+  -121,
+  -120,
+  -119,
+  -118,
+  -110,
+  -109,
+  -108,
+  -107,
+  -106,
+  -105,
+  -104,
+  -103,
+  -102,
+  -94,
+  -93,
+  -92,
+  -91,
+  -90,
+  -89,
+  -88,
+  -87,
+  -86,
+  -78,
+  -77,
+  -76,
+  -75,
+  -74,
+  -73,
+  -72,
+  -71,
+  -70,
+  -62,
+  -61,
+  -60,
+  -59,
+  -58,
+  -57,
+  -56,
+  -55,
+  -54,
+  -46,
+  -45,
+  -44,
+  -43,
+  -42,
+  -41,
+  -40,
+  -39,
+  -38,
+  -31,
+  -30,
+  -29,
+  -28,
+  -27,
+  -26,
+  -25,
+  -24,
+  -23,
+  -22,
+  -15,
+  -14,
+  -13,
+  -12,
+  -11,
+  -10,
+  -9,
+  -8,
+  -7,
+  -6,
+  17,
+  0,
+  2,
+  1,
+  2,
+  4,
+  4,
+  3,
+  4,
+  7,
+  5,
+  4,
+  4,
+  0,
+  1,
+  2,
+  119,
+  0,
+  1,
+  2,
+  3,
+  17,
+  4,
+  5,
+  33,
+  49,
+  6,
+  18,
+  65,
+  81,
+  7,
+  97,
+  113,
+  19,
+  34,
+  50,
+  -127,
+  8,
+  20,
+  66,
+  -111,
+  -95,
+  -79,
+  -63,
+  9,
+  35,
+  51,
+  82,
+  -16,
+  21,
+  98,
+  114,
+  -47,
+  10,
+  22,
+  36,
+  52,
+  -31,
+  37,
+  -15,
+  23,
+  24,
+  25,
+  26,
+  38,
+  39,
+  40,
+  41,
+  42,
+  53,
+  54,
+  55,
+  56,
+  57,
+  58,
+  67,
+  68,
+  69,
+  70,
+  71,
+  72,
+  73,
+  74,
+  83,
+  84,
+  85,
+  86,
+  87,
+  88,
+  89,
+  90,
+  99,
+  100,
+  101,
+  102,
+  103,
+  104,
+  105,
+  106,
+  115,
+  116,
+  117,
+  118,
+  119,
+  120,
+  121,
+  122,
+  -126,
+  -125,
+  -124,
+  -123,
+  -122,
+  -121,
+  -120,
+  -119,
+  -118,
+  -110
+];
