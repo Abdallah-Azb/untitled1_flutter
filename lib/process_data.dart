@@ -31,7 +31,7 @@ class ProcessPacket implements ImgListener {
     print(" nonce ==>>   $nonce");
     print(" key ==>>   $key");
 
-    dataAfterDecrypt = HelperEncryptionUsingSodium.decrypt(cipherText: cipherText, nonce: nonce, key: key);
+    dataAfterDecrypt = HelperDecryptionUsingSodium.decrypt(cipherText: cipherText, nonce: nonce, key: key);
     if (dataAfterDecrypt != null) {
       dataLength = dataAfterDecrypt!.length;
       int seq = ((dataAfterDecrypt![1] & 0xff) << 16) | ((dataAfterDecrypt![2] & 0xff) << 8) | ((dataAfterDecrypt![3] & 0xff));
@@ -57,7 +57,7 @@ class ProcessPacket implements ImgListener {
     }
 }
 
-class HelperEncryptionUsingSodium {
+class HelperDecryptionUsingSodium {
   static Uint8List decrypt({required Uint8List cipherText, required Uint8List nonce, required Uint8List key}) =>
       Sodium.cryptoAeadChacha20poly1305Decrypt(null, cipherText, null, nonce, key);
 }
