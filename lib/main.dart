@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:math' as Math;
 import 'dart:typed_data';
+import 'dart:ui';
 import 'package:at_commons/at_commons.dart';
 import 'package:dio/dio.dart';
 import 'dart:io';
@@ -67,6 +68,7 @@ class _MyHomePageState extends State<MyHomePage>  implements ImgListener{
   String? keyEncepted;
 
   Uint8List? dataAfterDecrypt;
+  Uint8List?  image ;
 
   @override
   void initState() {
@@ -111,7 +113,7 @@ class _MyHomePageState extends State<MyHomePage>  implements ImgListener{
   requestLiveInfo() async {
     responseDataRequest = "Waiting ......";
     setState(() {});
-    String token = "Bearer 159fdc021280b40c671725c1b299a158e0f1eb324e52e782d8a23a378eb389b9";
+    String token = "Bearer 5b7aa4a7add5c50b5378c7d03fcf26a95490443f4e2b58a8247be474fb451860";
 
     String liveInfoApi = "https://api.doorbird.io/live/info";
 
@@ -270,7 +272,7 @@ class _MyHomePageState extends State<MyHomePage>  implements ImgListener{
               '$_counter',
               style: Theme.of(context).textTheme.headline4,
             ),
-            dataAfterDecrypt == null ? SizedBox() : Expanded(child: Image.memory(Uint8List.fromList(dataAfterDecrypt!.buffer.asUint8List())))
+            dataAfterDecrypt == null ? SizedBox() : Expanded(child: Image.memory(image!))
           ],
         ),
       ),
@@ -278,8 +280,15 @@ class _MyHomePageState extends State<MyHomePage>  implements ImgListener{
   }
 
   @override
-  void onImageReceived(Uint8List image) {
-    // TODO: implement onImageReceived
+  void onImageReceived(Uint8List imgData)async  {
+    print("Image received : ${imgData.length}");
+    // decode jpeg into bitmap to display it in image view
+    final codec = await instantiateImageCodec(imgData);
+    final frame = await codec.getNextFrame();
+    final image = frame.image;
+    // setState(() {
+    //   liveIv.image = image;
+    // });
   }
 
 
