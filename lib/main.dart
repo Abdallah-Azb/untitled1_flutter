@@ -17,6 +17,7 @@ import 'package:untitled1_flutter/jpeg_queue.dart';
 // import 'package:image/image.dart';
 
 import 'image_load.dart';
+import 'network_helper.dart';
 
 void main() {
   Sodium.init();
@@ -383,7 +384,7 @@ print("offset ==>>   $offset");
               style: Theme.of(context).textTheme.headline4,
             ),
             // imageeeee == null ? SizedBox() : Expanded(child: Image.memory(Uint8List.fromList(imageeeee!)))
-          Expanded(child: Image.memory(Uint8List.fromList(fakwDataImage))),
+      //    Expanded(child: Image.memory(Uint8List.fromList(fakwDataImage))),
           ],
         ),
       ),
@@ -391,7 +392,11 @@ print("offset ==>>   $offset");
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           FloatingActionButton(
-            onPressed: _incrementCounter,
+            // onPressed: _incrementCounter,
+            onPressed: (){
+              NetworkHelper networkHelper = NetworkHelper();
+              networkHelper.getInfo();
+            },
             tooltip: 'Increment',
             child: const Icon(Icons.add),
           ),
