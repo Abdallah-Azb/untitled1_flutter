@@ -12,6 +12,8 @@ import 'package:dio/dio.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_sodium/flutter_sodium.dart';
+import 'package:untitled1_flutter/audio_queue.dart';
+import 'package:untitled1_flutter/jpeg_queue.dart';
 // import 'package:image/image.dart';
 
 import 'image_load.dart';
@@ -49,7 +51,7 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage>  implements ImgListener , AudioListener{
   int _counter = 0;
 
   // final String host = "apiorun.doorbird.net";
@@ -74,6 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String? keyEncepted;
 
   Uint8List? dataAfterDecrypt;
+
 
   void _incrementCounter() async {
     requestLiveInfo();
@@ -118,8 +121,10 @@ class _MyHomePageState extends State<MyHomePage> {
   requestLiveInfo() async {
     responseDataRequest = "Waiting ......";
     setState(() {});
+    String token = "Bearer ff96947f38af858924ec30d3026667687192c04a609e4e349a12bc273913d79a";
 
     String liveInfoApi = "https://api.doorbird.io/live/info";
+
 
     try {
       Dio dio = Dio();
@@ -260,7 +265,7 @@ class _MyHomePageState extends State<MyHomePage> {
         /// Image
         if(type.value == UdpConstants.PACKET_JPEG_V2.value){ // 52
 
-          JpegQueue.enqueue(seq, data,dataLength);
+          // JpegQueue.enqueue(seq, data,dataLength);
         }
 
       }
@@ -293,9 +298,8 @@ class _MyHomePageState extends State<MyHomePage> {
           ((dataAfterDecrypt![2] & 0xff) << 8) |
           ((dataAfterDecrypt![3] & 0xff));
       print("seq ===>>>    $seq");
-      int offset = dataAfterDecrypt!.offsetInBytes;
-      int imageLen = dataAfterDecrypt!.buffer.asByteData().getInt32(offset + 6);
-      int remaining = dataAfterDecrypt!.buffer.asByteData().lengthInBytes ~/ 2;
+
+      enqueue(seq);
 
 print("imageLen ==>>   $imageLen");
 print("remaining ==>>   $remaining");
@@ -309,7 +313,7 @@ print("offset ==>>   $offset");
       if(seq == vSeq){
         int offset = dataAfterDecrypt!.offsetInBytes;
         int imageLen = dataAfterDecrypt!.buffer.asByteData().getInt32(offset + 6);
-        int remaining = dataAfterDecrypt!.buffer.asByteData().lengthInBytes ~/ 2;
+  int pos = dataAfterDecrypt!.buffer.asByteData().getInt32(offset);      int remaining = dataAfterDecrypt!.buffer.asByteData().lengthInBytes ~/ 2;
 
 
 
@@ -395,6 +399,16 @@ print("offset ==>>   $offset");
         ],
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+
+  @override
+  void onImageReceived(Uint8List image) {
+    // TODO: implement onImageReceived
+  }
+
+  @override
+  void onAudioReceived(List<int> audio) {
+    // TODO: implement onAudioReceived
   }
 }
 //
