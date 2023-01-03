@@ -5,7 +5,7 @@ import 'package:at_commons/at_commons.dart';
 import 'package:byte_util/byte.dart';
 import 'package:byte_util/byte_array.dart';
 import 'package:flutter/services.dart';
-import 'package:untitled1_flutter/process_data.dart';
+import 'package:untitled1_flutter/jpeg_queue.dart';
 import 'package:untitled1_flutter/udp_constants.dart';
 
 import 'decrypt_sodium_data.dart';
@@ -33,7 +33,7 @@ class SocketConnectHelper {
   late RawDatagramSocket datagramSocket;
   Datagram? datagramPacket;
 
-  connect() async {
+  connect(ImgListener imgListener) async {
     datagramSocket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
     datagramPacket =
         Datagram(Uint8List(16 * 1024), InternetAddress(host, type: InternetAddressType.any), 6999);
@@ -47,7 +47,7 @@ class SocketConnectHelper {
         Datagram? datagram = datagramSocket.receive();
         if (datagram != null) {
           /// Process Data HERE
-          ProcessPacket().processPacket(datagram, keyEncepted) ;
+          _processPacket(datagram , imgListener);
         }
       },
     );
@@ -82,6 +82,59 @@ class SocketConnectHelper {
     _sendPacket(bb.getData());
     // requestedFlags = 5;
     // print("sendSubscribe   ${bb.getData()}");
+  }
+
+  //
+  _processPacket(Datagram datagram , ImgListener imgListener) {
+    ByteArray packetData = ByteArray(datagram.data);
+
+    Byte type = packetData.array.first;
+
+    ByteArray? data;
+
+    if (type.value == UdpConstants.PACKET_ENCRYPTION_TYPE_1.value) {
+      // 225  &-OR-& -31
+      // decrypt the data before handling them
+      ByteArray nonce = ByteArray(packetData.bytes.sublist(1, 9));
+      ByteArray encryptedData = ByteArray(packetData.bytes.sublist(nonce.array.length + 1));
+      ByteArray key = ByteArray(toUnit8List(keyEncepted.codeUnits));
+
+      try {
+        SodiumDecryptHelper sodiumDecryptHelper =
+            SodiumDecryptHelper(cipherText: encryptedData.bytes, nonce: nonce.bytes, key: key.bytes);
+        data = ByteArray(toUnit8List(sodiumDecryptHelper.decrypt()));
+
+      } catch (e) {
+        print("== Catch Error in Decrypt Data In Sodiom");
+      }
+      if (data != null) {
+        //log("DATA AFTER DECRYPT AS array  ===>>>    ${data.array}");
+        // print("======================");
+        // log("DATA AFTER DECRYPT AS  bytes ===>>>    ${data.bytes}");
+
+        int seq = ((data.array[1].value & 0xff) << 16) |
+        ((data.array[2].value & 0xff) << 8) |
+        ((data.array[3].value & 0xff));
+
+
+        int dataLength = data.bytes.length;
+        var byteData = ByteData(dataLength);
+        var i = 0;
+        var after = data.bytes;
+        print("After is ${after}");
+        after.forEach((element) {
+          byteData.setUint8(i, element);
+          i++;
+        });
+
+        if(data.array[0].value ==0x34){
+          JpegQueue().enqueue(seq, byteData, imgListener);
+        }
+
+      } else {
+        print("DATA AFTER DECRYPT IS NULL");
+      }
+    }
   }
 
   //

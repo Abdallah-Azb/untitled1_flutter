@@ -45,6 +45,7 @@ dependencies:
   mqtt5_client: ^3.3.3
   buffer: ^1.1.1
   synchronized: ^3.0.0+3
+  collection:
 
 dev_dependencies:
   flutter_test:
