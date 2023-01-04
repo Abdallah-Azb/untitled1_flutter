@@ -4,13 +4,13 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:bit_array/bit_array.dart';
-import 'package:buffer/buffer.dart' hide ByteData;
+import 'package:buffer/buffer.dart';
 import 'package:flutter/material.dart';
 
 class JpegQueue {
   int vSeq = 0;
   BitArray vPresent = BitArray(10000);
-  Uint8List? vData = Uint8List(64 * 1024);
+  Int8List? vData = Int8List(64 * 1024);
 
   void reset() {
     vSeq = 0;
@@ -21,7 +21,6 @@ class JpegQueue {
 
     print("seq is $seq");
     if (seq > vSeq) {
-      imgListener.onImageReceived(Uint8List(0));
       vPresent.clearAll();
       vSeq = seq;
       vData = null;
@@ -33,26 +32,36 @@ class JpegQueue {
 
       // reader.add(bb.buffer.asUint8List().sublist(6));
       // bb= bb.sublist(6);
+      // ByteDataReader reader= ByteDataReader();
+      //
+      // reader.add(bb.buffer.asUint8List());
 
-      print("All  Data >>>>>>> ${bb.buffer.asUint8List()}");
-      print("All  Length >>>>>>> ${bb.buffer.asUint8List().length}");
+      // print("All  Data >>>>>>> ${bb.buffer.asInt8List()}");
+      // print("All  Length >>>>>>> ${bb.buffer.asInt8List().length}");
 
 
-      int imageLen = bb.getInt32(6);
+      var index = 6;
+      int imageLen = bb.getInt32(index);
+      index +=4;
       // int imageOffset = bb.sublist(10).buffer.asByteData().getUint32(0);
-      print("IMAGE Length >>>>>>> $imageLen");
+      // print("IMAGE Length >>>>>>> $imageLen");
+      // print("Vdata Length >>>>>>> ${vData?.length}");
+      // print("Vdata Length in Bytes >>>>>>> ${vData?.lengthInBytes}");
 
-      if (vData == null || imageLen != vData?.length) {
+      if (vData == null || imageLen != vData?.lengthInBytes) {
         vPresent.clearAll();
-        vData = Uint8List(imageLen);
+        vData = Int8List(imageLen);
       }
 
-      int imageOffset = bb.getInt32(10);
+      int imageOffset = bb.getInt32(index);
+      index+=4;
 
-      print("IMAGE OFFSET >>>>>>> $imageOffset");
-      print("IMAGE Rmainig >>>>>>> ${bb.buffer.asUint8List().length -14}");
+      // print("IMAGE OFFSET >>>>>>> $imageOffset");
+      // print("IMAGE Rmainig >>>>>>> ${bb.buffer.asUint8List().length -14}");
 
-      int remaining = bb.buffer.asUint8List().length -14;
+      int remaining = bb.buffer.asUint8List().length -index;
+      // print("Initial Rmainig >>>>>>> ${remaining}");
+
       while (remaining >0) {
         // print("IMAGE Rmainig >>>>>>> ${bb.sublist(i).length}");
 
@@ -72,26 +81,45 @@ class JpegQueue {
 
         int blockSize =  min(remaining, 256);
 
-        // vData!.setRange(imageOffset, imageOffset + blockSize, vData!);
+        //
+        // print("Block Size >>>>>>> $blockSize");
+        // print("OFFSET >>>>>>> $imageOffset");
+        // print("INDEX >>>>>>> $index");
+
+
+
+        Int8List viewedData = Int8List.sublistView(bb , index ,index+ blockSize);
+        // print("New RANGE is ${viewedData}");
+
+        vData!.setRange(imageOffset, imageOffset+ blockSize, viewedData);
+        // print("New VDdaata is ${vData}");
+
 
         // vData = vData?.sublist(imageOffset , blockSize);
-        // vData = Uint8List.view(bb.buffer , imageOffset , blockSize);
-        bb = ByteData.view(bb.buffer , imageOffset , blockSize);
-        remaining = bb.buffer.asUint8List().length;
-        print("Remaining After Edit>>>>>>> $remaining");
+        // vData = bb.buffer.asUint8List(imageOffset , blockSize);
+        index+=blockSize;
 
+        // bb = ByteData.view(bb.buffer , imageOffset , blockSize);
+
+
+        remaining = bb.buffer.asUint8List().length - index;
         vPresent.setBit((imageOffset ~/ 256));
         imageOffset += blockSize;
-        print("IMAGE OFFSET + BLOCK SIZE >>>>>>> $imageOffset");
       }
 
       // Check if image is complete
-      print("VPresent ${json.encode(vPresent.toBinaryString())}");
       // vPresent.toBinaryString().indexOf('1')
-      if (vPresent.toBinaryString().indexOf('1') == imageLen ~/ 256) {
-        print("IMAGE COMPLETED");
+      // print("Index of 1 ${vPresent.toBinaryString().indexOf('1')}");
+      // print("State of 1 ${imageLen ~/ 256}");
+
+      // debugPrint("Last Image is >>> ${vData}" , wrapWidth: 100000);
+      // print("Index of 1 ${vPresent.toBinaryString().indexOf('0')}");
+      print("Index of 1 ${vPresent.toBinaryString().indexOf('0')}");
+      print("State of 1 ${imageLen ~/ 256}");
+      if (vPresent.toBinaryString().indexOf('0') > imageLen ~/ 256) {
+        print("imageCompleted");
         // Image Complete
-        imgListener.onImageReceived(Uint8List.fromList(vData!));
+        imgListener.onImageReceived(Uint8List.fromList(vData!.toList()));
         vData = null;
         vPresent.clearAll();
         vSeq++;

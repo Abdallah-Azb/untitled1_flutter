@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:at_commons/at_commons.dart';
 import 'package:byte_util/byte.dart';
 import 'package:byte_util/byte_array.dart';
@@ -30,27 +31,60 @@ class SocketConnectHelper {
 
   // String host = "142.132.214.220";
 
+
+  JpegQueue jpegQueue = JpegQueue();
   late RawDatagramSocket datagramSocket;
   Datagram? datagramPacket;
+  int subscribeSeq = 0;
+
+  int requestedFlag = 0;
+  int currentFlag = 0;
+
 
   connect(ImgListener imgListener) async {
+    int lastSubscribe = 0;
+
     datagramSocket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
     datagramPacket =
         Datagram(Uint8List(16 * 1024), InternetAddress(host, type: InternetAddressType.any), 6999);
-    Timer.periodic(
-      const Duration(seconds: 2),
-      (timer) {
-        _sendSubscribe(true);
 
-        datagramSocket.timeout(const Duration(milliseconds: 1000));
+   Timer.periodic(const Duration(microseconds: 5), (timer) async {
+     try{
+       if(lastSubscribe + (currentFlag == requestedFlag ? 15000 : 500)< DateTime.now().millisecondsSinceEpoch ){
+         lastSubscribe = DateTime.now().millisecondsSinceEpoch;
+         _sendSubscribe(true);
+       }
+       datagramSocket.timeout(const Duration(seconds: 1));
+       Datagram? datagram = datagramSocket.receive();
+       if (datagram != null) {
+         /// Process Data HERE
+         _processPacket(datagram , imgListener);
+       }
 
-        Datagram? datagram = datagramSocket.receive();
-        if (datagram != null) {
-          /// Process Data HERE
-          _processPacket(datagram , imgListener);
-        }
-      },
-    );
+     }catch(e){
+       lastSubscribe =0;
+       try{
+         datagramSocket = datagramSocket.port >0 ? await RawDatagramSocket.bind(InternetAddress.anyIPv4, datagramSocket.port) : await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
+     }
+     catch(e){
+     datagramSocket=  await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
+     }
+   }
+   });
+
+    // Timer.periodic(
+    //   const Duration(milliseconds: 500),
+    //   (timer) {
+    //     _sendSubscribe(true);
+    //     datagramSocket.timeout(const Duration(milliseconds: 1000));
+    //
+    //     Datagram? datagram = datagramSocket.receive();
+    //     if (datagram != null) {
+    //       /// Process Data HERE
+    //       _processPacket(datagram , imgListener);
+    //     }
+    //   },
+    // );
   }
 
   _sendPacket(List<int> buffer) async {
@@ -59,7 +93,6 @@ class SocketConnectHelper {
 
   //
   void _sendSubscribe(bool subscribe) {
-    int subscribeSeq = 0;
     // var currentFlags = 0;
     // var requestedFlags = 0;
     // ByteData subscribe = ByteData(0);
@@ -80,7 +113,7 @@ class SocketConnectHelper {
     bb.addByte(47); // audioType enabled
     subscribeSeq++;
     _sendPacket(bb.getData());
-    // requestedFlags = 5;
+    requestedFlag = 5;
     // print("sendSubscribe   ${bb.getData()}");
   }
 
@@ -102,7 +135,7 @@ class SocketConnectHelper {
       try {
         SodiumDecryptHelper sodiumDecryptHelper =
             SodiumDecryptHelper(cipherText: encryptedData.bytes, nonce: nonce.bytes, key: key.bytes);
-        data = ByteArray(toUnit8List(sodiumDecryptHelper.decrypt()));
+        data = ByteArray(sodiumDecryptHelper.decrypt());
 
       } catch (e) {
         print("== Catch Error in Decrypt Data In Sodiom");
@@ -120,15 +153,15 @@ class SocketConnectHelper {
         int dataLength = data.bytes.length;
         var byteData = ByteData(dataLength);
         var i = 0;
-        var after = data.bytes;
-        print("After is ${after}");
+        var after = Int8List.fromList(data.bytes);
+        // print("After is ${after}");
         after.forEach((element) {
-          byteData.setUint8(i, element);
+          byteData.setInt8(i, element);
           i++;
         });
 
         if(data.array[0].value ==0x34){
-          JpegQueue().enqueue(seq, byteData, imgListener);
+         jpegQueue.enqueue(seq, byteData, imgListener);
         }
 
       } else {

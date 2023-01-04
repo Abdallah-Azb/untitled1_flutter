@@ -13,7 +13,7 @@ class NetworkHelper {
   }
 
   // ACCESS TOKEN
-  final String token = "Bearer 6829dc68040efebbc614dad04477396d969aa4332235797630c27210a4245173";
+  final String token = "Bearer 13f4750ab3211b1fbc7005b671aa20959633c01e8d5e37b06046736f8f73bbf1";
 
   // END POINT LIVE
   final String liveInfoApi = "https://api.doorbird.io/live/info";
