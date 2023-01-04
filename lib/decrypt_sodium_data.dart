@@ -18,11 +18,12 @@ class SodiumDecryptHelper {
   });
 
   // function decrypt
-  Int8List decrypt() {
+  Uint8List decrypt() {
     print("cipherText ==>  $cipherText");
     print("nonce ==>  $nonce");
     print("key ==>  $key");
-    Int8List decryptData = Int8List.fromList(Sodium.cryptoAeadChacha20poly1305Decrypt(null, cipherText, null, nonce, key));
+    // Uint8List decryptData = Uint8List.fromList(Sodium.cryptoAeadChacha20poly1305Decrypt(null, cipherText, null, nonce, key));
+    Uint8List decryptData = Sodium.cryptoAeadChacha20poly1305Decrypt(null, cipherText, null, nonce, key);
     print("decryptData ==>  $decryptData");
     return decryptData ;
   }

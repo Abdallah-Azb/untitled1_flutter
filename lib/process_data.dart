@@ -10,10 +10,9 @@ import '../jpeg_queue.dart';
 import 'decrypt_sodium_data.dart';
 
 class ProcessPacket implements ImgListener {
-  Int8List? dataAfterDecrypt;
+  Uint8List? dataAfterDecrypt;
 
   processPacket(Datagram datagram, String? encryptKey) {
-
 
     ByteArray packetData = ByteArray(datagram.data);
 
@@ -28,10 +27,31 @@ class ProcessPacket implements ImgListener {
       ByteArray key = ByteArray(toUnit8List(encryptKey!.codeUnits));
       dataAfterDecrypt = SodiumDecryptHelper(cipherText: encryptedData.bytes, nonce: nonce.bytes, key: key.bytes).decrypt();
       if (dataAfterDecrypt != null) {
-        int seq = ((dataAfterDecrypt![1] & 0xff) << 16) | ((dataAfterDecrypt![2] & 0xff) << 8) | ((dataAfterDecrypt![3] & 0xff));
-        JpegQueue().enqueue(seq, Int8List.fromList(dataAfterDecrypt!.toList()), this);
-        log("dataAfterDecrypt ==>>>     $dataAfterDecrypt");
-        print("seq ===>>>    $seq");
+        // int seq = ((dataAfterDecrypt![1] & 0xff) << 16) | ((dataAfterDecrypt![2] & 0xff) << 8) | ((dataAfterDecrypt![3] & 0xff));
+
+        int seq = 0 ;
+        if(dataAfterDecrypt!.first == 33){
+          print("YOU ARE RECIVE AUDIO ");
+          int length = 160;
+          for (int i = 0, r = 0; i < length; r++) {
+            type = Byte(dataAfterDecrypt![i++]) ;
+            seq = ((dataAfterDecrypt! [i++] & 0xff) << 16) | ((dataAfterDecrypt!  [i++] & 0xff) << 8) | ((dataAfterDecrypt! [i++] & 0xff));
+            // state = dataAfterDecrypt! [i++];
+            // flags = dataAfterDecrypt! [i++];
+            Uint8List ulaw = Uint8List(length);
+           // List.copyRange(ulaw, i, dataAfterDecrypt!,0,length-3);
+            ulaw = dataAfterDecrypt!.sublist(3,length+3);
+            i += length;
+            print("SEQ AUDIO >>>>    ${seq}");
+            print("ulaw AUDIO >>>>    ${ulaw.toList()}");
+            print("r AUDIO >>>>    ${r}");
+            // aq.enqueue(seq, ulaw, r);
+          }
+        }
+
+
+
+
       }
     }
   }

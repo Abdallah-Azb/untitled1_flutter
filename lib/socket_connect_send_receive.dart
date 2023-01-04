@@ -40,7 +40,7 @@ class SocketConnectHelper {
     Timer.periodic(
       const Duration(seconds: 2),
       (timer) {
-        _sendSubscribe(true);
+        sendSubscribe(true);
 
         datagramSocket.timeout(const Duration(milliseconds: 1000));
 
@@ -53,13 +53,15 @@ class SocketConnectHelper {
     );
   }
 
-  _sendPacket(List<int> buffer) async {
+  sendPacket(List<int> buffer) async {
+    print("SEND pACKET >>    "+buffer.toString());
     datagramSocket.send(buffer, InternetAddress(host), port);
   }
 
   //
-  void _sendSubscribe(bool subscribe) {
-    int subscribeSeq = 0;
+  int subscribeSeq = 0;
+
+  void sendSubscribe(bool subscribe) {
     // var currentFlags = 0;
     // var requestedFlags = 0;
     // ByteData subscribe = ByteData(0);
@@ -68,20 +70,19 @@ class SocketConnectHelper {
     // var audioType = UdpConstants.PACKET_NO_AUDIO;
     // subscribe = UdpConstants.FLAG_STATE;
     ByteBuffer bb = ByteBuffer(capacity: 128);
-    bb.addByte(UdpConstants.PACKET_SUBSCRIBE.buffer.lengthInBytes);
-    bb.addByte((subscribeSeq >> 16));
-    bb.addByte((subscribeSeq >> 8));
+    bb.addByte(UdpConstants.PACKET_SUBSCRIBE.buffer.lengthInBytes); //1
+    bb.addByte((subscribeSeq >> 16)); //0
+    bb.addByte((subscribeSeq >> 8)); //0
     bb.addByte(subscribeSeq);
     List<int> session = sessionId.codeUnits;
     bb.addByte(session.length);
     bb.append(session);
-    bb.addByte(5); //  flag state + flag vedio
-    bb.addByte(52); // videoType
-    bb.addByte(47); // audioType enabled
+    bb.addByte(3); //  flag state + flag vedio subsurib
+    bb.addByte(63); // videoType
+    bb.addByte(33); // audioType enabled
     subscribeSeq++;
-    _sendPacket(bb.getData());
-    // requestedFlags = 5;
-    // print("sendSubscribe   ${bb.getData()}");
+    sendPacket(bb.getData());
+
   }
 
   //

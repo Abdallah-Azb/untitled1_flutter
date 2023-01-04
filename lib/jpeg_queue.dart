@@ -14,16 +14,19 @@ class JpegQueue {
   }
 
   void enqueue(int seq, Int8List? bb, ImgListener imgListener) {
+    print("SEQ >>>   $seq");
+    print("Int8List bb >>>   $bb");
     ByteDataReader reader = ByteDataReader();
+    reader.add(bb!.toList());
     if (seq > vSeq) {
       imgListener.onImageReceived(Int8List(0));
       vPresent.clearAll();
       vSeq = seq;
       vData = null;
     }
-    if (seq == vSeq && bb!.length > 10) {
-      reader.add(bb.sublist(6));
-      int imageLen = reader.readUint32();
+    if (seq == vSeq ) {
+      reader.add(bb!.sublist(6));
+      int imageLen = reader.readInt8();
       // int imageOffset = bb.sublist(10).buffer.asByteData().getUint32(0);
 
       if (vData == null || imageLen != vData?.length) {
@@ -31,13 +34,15 @@ class JpegQueue {
         vData = Int8List(imageLen);
       }
 
-      int imageOffset = bb.sublist(10).buffer.asByteData().getUint32(0);
+      // int imageOffset = bb.sublist(10).buffer.asByteData().getUint32(0);
+      int imageOffset = reader.readInt8();
 
       print("IMAGE LENGTH >>>>>>> $imageLen");
       print("IMAGE OFFSET >>>>>>> $imageOffset");
       while (reader.remainingLength > 0) {
         int blockSize = Math.min(reader.remainingLength, 256);
-        vData!.setRange(imageOffset, imageOffset + blockSize, bb.sublist(imageOffset, imageOffset + blockSize));
+        // vData!.setRange(imageOffset, imageOffset + blockSize, bb.sublist(imageOffset, imageOffset + blockSize));
+        vData!.setRange(imageOffset, blockSize,reader.read(blockSize));
         vPresent.setBit((imageOffset ~/ 256).round());
         imageOffset += blockSize;
         print("IMAGE OFFSET + BLOCK SIZE >>>>>>> $imageOffset");
