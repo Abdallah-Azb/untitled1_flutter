@@ -45,6 +45,10 @@ dependencies:
   mqtt5_client: ^3.3.3
   buffer: ^1.1.1
   synchronized: ^3.0.0+3
+  collection:
+  get: ^4.6.5
+  raw_sound: ^0.3.0+1
+
 
 dev_dependencies:
   flutter_test:

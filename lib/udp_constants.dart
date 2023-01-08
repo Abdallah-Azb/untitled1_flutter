@@ -18,3 +18,34 @@ class UdpConstants {
   static Byte STATE_VIDEO_SESSION_INVALID = Byte(5);
   static Byte STATE_AUDIO_SESSION_INVALID = Byte(6);
 }
+
+
+// void enqueue(int seq, ByteBuffer bb, ImgListener imgListener) {
+//   if (seq > vSeq) {
+//     imgListener.imgReceived(new Uint8List(0)); // marker for incomplete image (broken image)
+//     vPresent.clear();
+//     vSeq = seq;
+//     vData = null;
+//   }
+//   if (seq == vSeq) {
+//     bb.position(6);
+//     int imageLen = bb.getInt();
+//     if (vData == null || imageLen != vData.length) {
+//       vPresent.clear();
+//       vData = new Uint8List(imageLen);
+//     }
+//     int imageOffset = bb.getInt();
+//     while (bb.remaining() > 0) {
+//       int blockSize = min(bb.remaining(), 256);
+//       vData.setRange(imageOffset, imageOffset + blockSize, bb.getUint8List(blockSize));
+//       vPresent.set(imageOffset ~/ 256);
+//       imageOffset += blockSize;
+//     }
+//     if (vPresent.nextClearBit(0) > imageLen ~/ 256) {
+//       imgListener.imgReceived(vData);
+//       vData = null;
+//       vPresent.clear();
+//       vSeq++;
+//     }
+//   }
+// }

@@ -13,7 +13,7 @@ class NetworkHelper {
   }
 
   // ACCESS TOKEN
-  final String token = "Bearer 6d12bd14ab807c88790048c3df645871aae4bc0496774079f6965d1ae8ba9fd8";
+  final String token = "Bearer f054f16525f4c1f42e0b09a4c8e87f5a887f90f63f2673e725937de74e8c4421";
 
   // END POINT LIVE
   final String liveInfoApi = "https://api.doorbird.io/live/info";
@@ -62,7 +62,7 @@ class NetworkHelper {
     } catch (exception) {
       //   log(exception.toString(), error: 'ERROR GET INFO API', name: 'EXCEPTION API');
     }
-    return responseGetInfo;
+    return responseGetInfo ;
   }
 }
 
