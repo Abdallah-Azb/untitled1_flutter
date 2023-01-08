@@ -6,6 +6,7 @@ import 'package:at_commons/at_commons.dart';
 import 'package:byte_util/byte.dart';
 import 'package:byte_util/byte_array.dart';
 import 'package:flutter/services.dart';
+import 'package:untitled1_flutter/audio_queue.dart';
 import 'package:untitled1_flutter/jpeg_queue.dart';
 import 'package:untitled1_flutter/udp_constants.dart';
 
@@ -41,13 +42,13 @@ class SocketConnectHelper {
   int currentFlag = 0;
 
 
-  connect(ImgListener imgListener) async {
+  connect(ImgListener imgListener , AudioQueue audioQueue) async {
     int lastSubscribe = 0;
 
     datagramSocket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
     datagramPacket =
         Datagram(Uint8List(16 * 1024), InternetAddress(host, type: InternetAddressType.any), 6999);
-
+   //
    Timer.periodic(const Duration(microseconds: 5), (timer) async {
      try{
        if(lastSubscribe + (currentFlag == requestedFlag ? 15000 : 500)< DateTime.now().millisecondsSinceEpoch ){
@@ -58,7 +59,7 @@ class SocketConnectHelper {
        Datagram? datagram = datagramSocket.receive();
        if (datagram != null) {
          /// Process Data HERE
-         _processPacket(datagram , imgListener);
+         _processPacket(datagram , imgListener , audioQueue);
        }
 
      }catch(e){
@@ -71,6 +72,41 @@ class SocketConnectHelper {
      }
    }
    });
+
+  //
+  //   try{
+  //
+  //     while(true){
+  //
+  //         if(lastSubscribe + (currentFlag == requestedFlag ? 15000 : 500)< DateTime.now().millisecondsSinceEpoch ){
+  //           lastSubscribe = DateTime.now().millisecondsSinceEpoch;
+  //           _sendSubscribe(true);
+  //         }
+  //         datagramSocket.timeout(const Duration(seconds: 1));
+  //         Datagram? datagram = datagramSocket.receive();
+  //         if (datagram != null) {
+  //           /// Process Data HERE
+  //           _processPacket(datagram , imgListener , audioQueue);
+  //         }
+  //
+  //
+  //         try{
+  //           datagramSocket = datagramSocket.port >0 ? await RawDatagramSocket.bind(InternetAddress.anyIPv4, datagramSocket.port) : await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
+  //         }
+  //         catch(e){
+  //           datagramSocket=  await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
+  //         }
+  //       }
+  //   }
+  //
+  // catch(e){
+  //     print("Exceptionis$e");
+  //   lastSubscribe =0;
+  //
+  // }
+
+
+
 
     // Timer.periodic(
     //   const Duration(milliseconds: 500),
@@ -108,9 +144,9 @@ class SocketConnectHelper {
     List<int> session = sessionId.codeUnits;
     bb.addByte(session.length);
     bb.append(session);
-    bb.addByte(5); //  flag state + flag vedio
+    bb.addByte(7); //  flag state + flag vedio
     bb.addByte(52); // videoType
-    bb.addByte(47); // audioType enabled
+    bb.addByte(33); // audioType enabled
     subscribeSeq++;
     _sendPacket(bb.getData());
     requestedFlag = 5;
@@ -118,7 +154,7 @@ class SocketConnectHelper {
   }
 
   //
-  _processPacket(Datagram datagram , ImgListener imgListener) {
+  _processPacket(Datagram datagram , ImgListener imgListener , AudioQueue audioQueue ) {
     ByteArray packetData = ByteArray(datagram.data);
 
     Byte type = packetData.array.first;
@@ -154,6 +190,9 @@ class SocketConnectHelper {
         var byteData = ByteData(dataLength);
         var i = 0;
         var after = Int8List.fromList(data.bytes);
+
+        Byte state = data.array[4];
+        int flags = data.array[5].value;
         // print("After is ${after}");
         after.forEach((element) {
           byteData.setInt8(i, element);
@@ -162,6 +201,22 @@ class SocketConnectHelper {
 
         if(data.array[0].value ==0x34){
          jpegQueue.enqueue(seq, byteData, imgListener);
+        }
+
+        if(data.array[0].value == 0x21){
+          // print("AudioREceived");
+          // int length = 160;
+          // for (int i = 0, r = 0; i < length; r++) {
+          //   type = data.array[i++];
+          //   seq = ((data.array[i++].value & 0xff) << 16) | ((data.array[i++].value & 0xff) << 8) | ((data.array[i++].value & 0xff));
+          //   state = data.array[i++];
+          //   flags = data.array[i++].value;
+          //   Int8List ulaw = Int8List(length);
+          //   ulaw.setRange(0, length, data.bytes.sublist(i));
+          //   // System.arraycopy(data, i, ulaw, 0, length);
+          //   i += length;
+          //   audioQueue.enqueue(seq, ulaw, r);
+          // }
         }
 
       } else {

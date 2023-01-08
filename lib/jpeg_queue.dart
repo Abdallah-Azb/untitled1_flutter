@@ -19,7 +19,6 @@ class JpegQueue {
   void enqueue(int seq, ByteData bb, ImgListener imgListener) {
 
 
-    print("seq is $seq");
     if (seq > vSeq) {
       vPresent.clearAll();
       vSeq = seq;
@@ -114,10 +113,7 @@ class JpegQueue {
 
       // debugPrint("Last Image is >>> ${vData}" , wrapWidth: 100000);
       // print("Index of 1 ${vPresent.toBinaryString().indexOf('0')}");
-      print("Index of 1 ${vPresent.toBinaryString().indexOf('0')}");
-      print("State of 1 ${imageLen ~/ 256}");
       if (vPresent.toBinaryString().indexOf('0') > imageLen ~/ 256) {
-        print("imageCompleted");
         // Image Complete
         imgListener.onImageReceived(Uint8List.fromList(vData!.toList()));
         vData = null;

@@ -47,6 +47,7 @@ dependencies:
   synchronized: ^3.0.0+3
   collection:
   get: ^4.6.5
+  raw_sound: ^0.3.0+1
 
 
 dev_dependencies:

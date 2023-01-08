@@ -14,6 +14,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_sodium/flutter_sodium.dart';
 import 'package:get/get.dart';
+import 'package:raw_sound/raw_sound_player.dart';
 import 'package:untitled1_flutter/audio_queue.dart';
 import 'package:untitled1_flutter/jpeg_queue.dart';
 import 'package:untitled1_flutter/socket_connect_send_receive.dart';
@@ -63,6 +64,10 @@ class _MyHomePageState extends State<MyHomePage>
     implements ImgListener, AudioListener {
   int _counter = 0;
 
+  AudioQueue audioQueue = AudioQueue();
+  final _playerPCMI16 = RawSoundPlayer();
+
+
   Rx<Uint8List> image = Uint8List(0).obs ;
   // Uint8List? image;
 
@@ -110,12 +115,36 @@ class _MyHomePageState extends State<MyHomePage>
               NetworkHelper networkHelper = NetworkHelper();
               ResponseGetInfo? responseGetInfo = await networkHelper.getInfo();
               if (responseGetInfo != null) {
+
+                _playerPCMI16
+                    .initialize(
+                  bufferSize: 724,
+                  nChannels: 1,
+                  sampleRate: 8000,
+                  pcmType: RawSoundPCMType.PCMI16,
+                )
+                    .then((value) {
+                  setState(() {
+                    // Trigger rebuild to update UI
+                  });
+                });
+
+
+                // audioQueue.startDecoding(this);
+
+
                 SocketConnectHelper socketConnectHelper = SocketConnectHelper(
                     host: responseGetInfo.host,
                     port: int.parse(responseGetInfo.port.toString()),
                     sessionId: responseGetInfo.sessionId,
                     keyEncepted: responseGetInfo.key);
-                socketConnectHelper.connect(this);
+
+
+
+                socketConnectHelper.connect(this , audioQueue);
+
+               // await playAudio();
+
               }
             },
             tooltip: 'Increment',
@@ -138,14 +167,38 @@ class _MyHomePageState extends State<MyHomePage>
     //   print("Running in the UI thread");
     // });
     // Future.wait((){});
-
+      print("ImageReieved");
       this.image.value = image;
 
     // TODO: implement onImageReceived
   }
 
+
+  playAudio() async{
+
+    Timer.periodic(Duration(milliseconds: 500), (timer) async {
+      if(!_playerPCMI16.isPlaying){
+        await _playerPCMI16.play();
+      }
+      // print("AudiLength${audio.length}");
+      if(_playerPCMI16.isPlaying){
+        _playerPCMI16.feed(Uint8List.fromList([-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124]));
+      }
+    });
+
+
+
+  }
   @override
-  void onAudioReceived(List<int> audio) {
+  Future<void> onAudioReceived(List<int> audio) async {
+
+    if(!_playerPCMI16.isPlaying){
+   await _playerPCMI16.play();
+    }
+    print("AudiLength${audio.length}");
+    if(_playerPCMI16.isPlaying){
+      _playerPCMI16.feed(Uint8List.fromList([-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124]));
+    }
     // TODO: implement onAudioReceived
   }
 }
