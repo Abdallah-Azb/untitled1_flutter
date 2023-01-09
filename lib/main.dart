@@ -12,12 +12,15 @@ import 'package:byte_util/byte_array.dart';
 import 'package:dio/dio.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_sodium/flutter_sodium.dart';
+import 'package:flutter_voice_processor/flutter_voice_processor.dart';
 import 'package:get/get.dart';
 import 'package:raw_sound/raw_sound_player.dart';
 import 'package:untitled1_flutter/audio_queue.dart';
 import 'package:untitled1_flutter/jpeg_queue.dart';
 import 'package:untitled1_flutter/socket_connect_send_receive.dart';
+import 'package:untitled1_flutter/udp_constants.dart';
 // import 'package:image/image.dart';
 
 import 'image_load.dart';
@@ -30,8 +33,7 @@ void main() {
 }
 
 //
-String token =
-    "Bearer c80b07efad87ced9561178c13fcda0ba4112bf5b0b793f434c50ff61e457f0ae";
+String token = "Bearer b8f3bc448f3b8487fba0cc83fcf758b894d343636e9af22a5ea69ea373e98cd1";
 
 //
 class MyApp extends StatelessWidget {
@@ -67,18 +69,9 @@ class _MyHomePageState extends State<MyHomePage>
   AudioQueue audioQueue = AudioQueue();
   final _playerPCMI16 = RawSoundPlayer();
 
+  Rx<Uint8List> image = Uint8List(0).obs;
 
-  Rx<Uint8List> image = Uint8List(0).obs ;
   // Uint8List? image;
-
-  late final AnimationController _controller = AnimationController(
-    duration: const Duration(milliseconds: 200),
-    vsync: this,
-  )..repeat(reverse: true);
-  late final Animation<double> _animation = CurvedAnimation(
-    parent: _controller,
-    curve: Curves.easeIn,
-  );
 
   Uint8List toUnit8List(List<int> data) {
     return Uint8List.fromList(data);
@@ -94,25 +87,19 @@ class _MyHomePageState extends State<MyHomePage>
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: Obx(() {
-        return Center(
-            child: image.value.isEmpty
-                ? const SizedBox()
-                : Image.memory(
-                    image.value!,
-                    width: MediaQuery.of(context).size.width,
-                    height: 500,
-                    fit: BoxFit.contain,
-              gaplessPlayback:true ,
-                  ));
-      }),
+      body: Center(
+        child: _buildToggleProcessingButton(),
+      ),
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           FloatingActionButton(
             // onPressed: _incrementCounter,
             onPressed: () async {
-              NetworkHelper networkHelper = NetworkHelper();
+              final _player = RawSoundPlayer();
+              playAudio();
+
+              /* NetworkHelper networkHelper = NetworkHelper();
               ResponseGetInfo? responseGetInfo = await networkHelper.getInfo();
               if (responseGetInfo != null) {
 
@@ -129,23 +116,15 @@ class _MyHomePageState extends State<MyHomePage>
                   });
                 });
 
-
                 // audioQueue.startDecoding(this);
-
-
                 SocketConnectHelper socketConnectHelper = SocketConnectHelper(
                     host: responseGetInfo.host,
                     port: int.parse(responseGetInfo.port.toString()),
                     sessionId: responseGetInfo.sessionId,
                     keyEncepted: responseGetInfo.key);
-
-
-
                 socketConnectHelper.connect(this , audioQueue);
 
-               // await playAudio();
-
-              }
+              }*/
             },
             tooltip: 'Increment',
             child: const Icon(Icons.add),
@@ -158,48 +137,541 @@ class _MyHomePageState extends State<MyHomePage>
 
   @override
   void onImageReceived(Uint8List image) {
-    // print("returned Image is${Int8List.fromList(image)}");
-    // print("returned Image is${image}");
-
-    //
-    // Flutter.app.post(() {
-    //   // This callback will be run in the UI thread
-    //   print("Running in the UI thread");
-    // });
-    // Future.wait((){});
-      print("ImageReieved");
-      this.image.value = image;
+    this.image.value = image;
 
     // TODO: implement onImageReceived
   }
 
-
-  playAudio() async{
+  playAudio() async {
+    _playerPCMI16.initialize(
+      // Buffer size of the underlying audio track (Android only)
+      bufferSize: 4096 << 3,
+      // Number of channels, either 1 or 2
+      nChannels: 1,
+      // Sample rate for playback in Hz
+      sampleRate: 16000,
+      // PCM format type, either PCMI16 (16-bit integer) or PCMF32 (32-bit float)
+      pcmType: RawSoundPCMType.PCMI16,
+    );
 
     Timer.periodic(Duration(milliseconds: 500), (timer) async {
-      if(!_playerPCMI16.isPlaying){
+      if (!_playerPCMI16.isPlaying) {
         await _playerPCMI16.play();
       }
       // print("AudiLength${audio.length}");
-      if(_playerPCMI16.isPlaying){
-        _playerPCMI16.feed(Uint8List.fromList([-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124]));
+      if (_playerPCMI16.isPlaying) {
+        _playerPCMI16.feed(Uint8List.fromList([
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124,
+          -32124
+        ]));
+
+        _playerPCMI16.feed(_voice!);
       }
     });
-
-
-
   }
+
   @override
   Future<void> onAudioReceived(List<int> audio) async {
-
-    if(!_playerPCMI16.isPlaying){
-   await _playerPCMI16.play();
+    if (!_playerPCMI16.isPlaying) {
+      await _playerPCMI16.play();
     }
     print("AudiLength${audio.length}");
-    if(_playerPCMI16.isPlaying){
-      _playerPCMI16.feed(Uint8List.fromList([-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124]));
+    if (_playerPCMI16.isPlaying) {
+      _playerPCMI16.feed(Uint8List.fromList([
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124,
+        -32124
+      ]));
     }
     // TODO: implement onAudioReceived
   }
-}
 
+  // transmitMic
+  int frameLength = 512;
+  int sampleRate = 16000;
+  VoiceProcessor voiceProcessor = VoiceProcessor.getVoiceProcessor(512, 16000);
+
+  void transmitMic() async {
+    print("= transmitMic = ");
+
+    try {
+      if (await voiceProcessor.hasRecordAudioPermission() ?? false) {
+        // _voiceProcessor.addListener((buffer) {
+        //   print("Listener received buffer of size ${buffer}!");
+        // });
+
+        // await _voiceProcessor.start();
+      } else {
+        print("Recording permission not granted");
+      }
+    } on PlatformException catch (ex) {
+      print("Failed to start recorder: " + ex.toString());
+    }
+  }
+
+  bool _isButtonDisabled = false;
+  bool _isProcessing = false;
+  VoiceProcessor? _voiceProcessor;
+  Function? _removeListener;
+  Function? _removeListener2;
+  Function? _errorListener;
+
+  void _initVoiceProcessor() async {
+    _voiceProcessor = VoiceProcessor.getVoiceProcessor(160, 16000);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _initVoiceProcessor();
+  }
+
+  Future<void> _startProcessing() async {
+    setState(() {
+      _isButtonDisabled = true;
+    });
+
+    _removeListener = _voiceProcessor?.addListener(_onBufferReceived);
+    // _removeListener2 = _voiceProcessor?.addListener(_onBufferReceived2);
+    _errorListener = _voiceProcessor?.addErrorListener(_onErrorReceived);
+    try {
+      if (await _voiceProcessor?.hasRecordAudioPermission() ?? false) {
+        await _voiceProcessor?.start();
+        setState(() {
+          _isProcessing = true;
+        });
+      } else {
+        print("Recording permission not granted");
+      }
+    } on PlatformException catch (ex) {
+      print("Failed to start recorder: " + ex.toString());
+    } finally {
+      setState(() {
+        _isButtonDisabled = false;
+      });
+    }
+  }
+
+  void _onBufferReceived(eventData) {
+    print("Listener 1 received buffer of size ${eventData.length}!");
+    log("Listener 2 received buffer   ${eventData} !");
+    transmitAudioData(eventData);
+  }
+
+  var encryptionNonce = 1;
+  int audioTransmitSequenceNumber = 0;
+
+  transmitAudioData(audioData) {
+    if (audioData.length != 160) {
+      print("Transmit must be of size 160");
+      return;
+    }
+    Uint8List ulaw = Uint8List(160);
+    for (int i = 0; i < audioData.length; i++) {
+      // conversion via mapping table from pcm to u-law 8kHz
+      ulaw[i] = AudioQueue.l2u[audioData[i] & 0xffff];
+    }
+    print("== ulaw ==   ${ulaw.toList()}");
+    Uint8List audioOutPacket = Uint8List(164);
+    int i = 0;
+    audioOutPacket[i++] = UdpConstants.PACKET_ULAW.value; // 33
+    audioOutPacket[i++] = (audioTransmitSequenceNumber >> 16); // 0
+    audioOutPacket[i++] = (audioTransmitSequenceNumber >> 8); // 0
+    audioOutPacket[i++] = (audioTransmitSequenceNumber);
+    List.copyRange(audioOutPacket, 4, ulaw);
+    // audioOutPacket.addAll(ulaw);
+    audioTransmitSequenceNumber++;
+    print("== audioOutPacket ==   ${audioOutPacket.toList()}");
+    // try {
+      sendEncryptedPacket(audioOutPacket);
+    // } catch (e) {
+    //   print("TRY CACH ERROE  $e");
+    // }
+  }
+
+  String key = '';
+
+  sendEncryptedPacket(Uint8List data) {
+    if (data.length < 4) {
+      throw Exception("invalid packet:   ${data.length}");
+    }
+    Uint8List nonceData = Uint8List(8);
+    for (int i = 0; i < nonceData.length; i++) {
+      nonceData[i] = (encryptionNonce >> (i * 8));
+    }
+
+    // Uint8List cypherUnit8List = Sodium.cryptoAeadChacha20poly1305Encrypt( data, null, null, nonceData.buffer.asUint8List(), Uint8List.fromList(key.codeUnits));
+    Uint8List cypherUnit8List = Sodium.cryptoAeadChacha20poly1305Encrypt( data, null, null, nonceData, Uint8List.fromList([99, 57, 48, 56, 50, 102, 99, 102, 50, 49, 57, 52, 54, 99, 98, 57, 55, 56, 54, 101, 101, 54, 99, 52, 100, 54, 57, 52, 56, 51, 55, 49]));
+
+    print("cypherUnit8List    ${cypherUnit8List.toList()}");
+
+    Uint8List encryptedPacket =  Uint8List(cypherUnit8List.length + nonceData.length + 1);
+    // encryptedPacket = nonceData.sublist(0);
+    // encryptedPacket = nonceData.sublist(0);
+    // encryptedPacket = nonceData.sublist(0);
+    List.copyRange(encryptedPacket, 0, cypherUnit8List, nonceData.length+1, cypherUnit8List.length) ;
+    List.copyRange(encryptedPacket, 0, nonceData, nonceData.length) ;
+    encryptedPacket[0] = UdpConstants.PACKET_ENCRYPTION_TYPE_1.value; // -31 && 225
+
+    print("encryptedPacket    ${encryptedPacket.toList()}");
+    encryptionNonce++;
+
+  }
+
+  Uint8List? _voice;
+
+  void _onBufferReceived2(eventData) {
+    //  log("Listener 2 received buffer of size ${eventData}!");
+  }
+
+  void _onErrorReceived(dynamic eventData) {
+    String errorMsg = eventData as String;
+    print("_onErrorReceived   $errorMsg");
+  }
+
+  Future<void> _stopProcessing() async {
+    setState(() {
+      _isButtonDisabled = true;
+    });
+
+    await _voiceProcessor?.stop();
+    _removeListener?.call();
+    _removeListener2?.call();
+    _errorListener?.call();
+
+    setState(() {
+      _isButtonDisabled = false;
+      _isProcessing = false;
+    });
+  }
+
+  void _toggleProcessing() async {
+    if (_isProcessing) {
+      await _stopProcessing();
+    } else {
+      await _startProcessing();
+    }
+  }
+
+  Widget _buildToggleProcessingButton() {
+    return ElevatedButton(
+      onPressed: _isButtonDisabled ? null : _toggleProcessing,
+      child: Text(_isProcessing ? "Stop" : "Start", style: TextStyle(fontSize: 20)),
+    );
+  }
+}

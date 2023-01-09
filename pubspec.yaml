@@ -48,6 +48,7 @@ dependencies:
   collection:
   get: ^4.6.5
   raw_sound: ^0.3.0+1
+  flutter_voice_processor: ^1.0.9
 
 
 dev_dependencies:

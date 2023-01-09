@@ -26,4 +26,9 @@ class SodiumDecryptHelper {
     // print("decryptData ==>  $decryptData");
     return decryptData ;
   }
+
+  // Uint8List encrypt(Int8List data , Int8List noce) {
+  // }
+
+
 }
