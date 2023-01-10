@@ -32,7 +32,6 @@ class SocketConnectHelper {
 
   // String host = "142.132.214.220";
 
-
   JpegQueue jpegQueue = JpegQueue();
   late RawDatagramSocket datagramSocket;
   Datagram? datagramPacket;
@@ -48,62 +47,62 @@ class SocketConnectHelper {
     datagramSocket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
     datagramPacket =
         Datagram(Uint8List(16 * 1024), InternetAddress(host, type: InternetAddressType.any), 6999);
-   //
-   Timer.periodic(const Duration(microseconds: 5), (timer) async {
-     try{
-       if(lastSubscribe + (currentFlag == requestedFlag ? 15000 : 500)< DateTime.now().millisecondsSinceEpoch ){
-         lastSubscribe = DateTime.now().millisecondsSinceEpoch;
-         _sendSubscribe(true);
-       }
-       datagramSocket.timeout(const Duration(seconds: 1));
-       Datagram? datagram = datagramSocket.receive();
-       if (datagram != null) {
-         /// Process Data HERE
-         _processPacket(datagram , imgListener , audioQueue);
-       }
+    //
+    Timer.periodic(const Duration(microseconds: 5), (timer) async {
+      try{
+        if(lastSubscribe + (currentFlag == requestedFlag ? 15000 : 500)< DateTime.now().millisecondsSinceEpoch ){
+          lastSubscribe = DateTime.now().millisecondsSinceEpoch;
+          _sendSubscribe(true);
+        }
+        datagramSocket.timeout(const Duration(seconds: 1));
+        Datagram? datagram = datagramSocket.receive();
+        if (datagram != null) {
+          /// Process Data HERE
+          _processPacket(datagram , imgListener , audioQueue);
+        }
 
-     }catch(e){
-       lastSubscribe =0;
-       try{
-         datagramSocket = datagramSocket.port >0 ? await RawDatagramSocket.bind(InternetAddress.anyIPv4, datagramSocket.port) : await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
-     }
-     catch(e){
-     datagramSocket=  await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
-     }
-   }
-   });
+      }catch(e){
+        lastSubscribe =0;
+        try{
+          datagramSocket = datagramSocket.port >0 ? await RawDatagramSocket.bind(InternetAddress.anyIPv4, datagramSocket.port) : await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
+        }
+        catch(e){
+          datagramSocket=  await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
+        }
+      }
+    });
 
-  //
-  //   try{
-  //
-  //     while(true){
-  //
-  //         if(lastSubscribe + (currentFlag == requestedFlag ? 15000 : 500)< DateTime.now().millisecondsSinceEpoch ){
-  //           lastSubscribe = DateTime.now().millisecondsSinceEpoch;
-  //           _sendSubscribe(true);
-  //         }
-  //         datagramSocket.timeout(const Duration(seconds: 1));
-  //         Datagram? datagram = datagramSocket.receive();
-  //         if (datagram != null) {
-  //           /// Process Data HERE
-  //           _processPacket(datagram , imgListener , audioQueue);
-  //         }
-  //
-  //
-  //         try{
-  //           datagramSocket = datagramSocket.port >0 ? await RawDatagramSocket.bind(InternetAddress.anyIPv4, datagramSocket.port) : await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
-  //         }
-  //         catch(e){
-  //           datagramSocket=  await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
-  //         }
-  //       }
-  //   }
-  //
-  // catch(e){
-  //     print("Exceptionis$e");
-  //   lastSubscribe =0;
-  //
-  // }
+    //
+    //   try{
+    //
+    //     while(true){
+    //
+    //         if(lastSubscribe + (currentFlag == requestedFlag ? 15000 : 500)< DateTime.now().millisecondsSinceEpoch ){
+    //           lastSubscribe = DateTime.now().millisecondsSinceEpoch;
+    //           _sendSubscribe(true);
+    //         }
+    //         datagramSocket.timeout(const Duration(seconds: 1));
+    //         Datagram? datagram = datagramSocket.receive();
+    //         if (datagram != null) {
+    //           /// Process Data HERE
+    //           _processPacket(datagram , imgListener , audioQueue);
+    //         }
+    //
+    //
+    //         try{
+    //           datagramSocket = datagramSocket.port >0 ? await RawDatagramSocket.bind(InternetAddress.anyIPv4, datagramSocket.port) : await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
+    //         }
+    //         catch(e){
+    //           datagramSocket=  await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
+    //         }
+    //       }
+    //   }
+    //
+    // catch(e){
+    //     print("Exceptionis$e");
+    //   lastSubscribe =0;
+    //
+    // }
 
 
 
@@ -124,6 +123,9 @@ class SocketConnectHelper {
   }
 
   _sendPacket(List<int> buffer) async {
+    datagramSocket.send(buffer, InternetAddress(host), port);
+  }
+  sendPacket(List<int> buffer) async {
     datagramSocket.send(buffer, InternetAddress(host), port);
   }
 
@@ -170,7 +172,7 @@ class SocketConnectHelper {
 
       try {
         SodiumDecryptHelper sodiumDecryptHelper =
-            SodiumDecryptHelper(cipherText: encryptedData.bytes, nonce: nonce.bytes, key: key.bytes);
+        SodiumDecryptHelper(cipherText: encryptedData.bytes, nonce: nonce.bytes, key: key.bytes);
         data = ByteArray(sodiumDecryptHelper.decrypt());
 
       } catch (e) {
@@ -200,7 +202,7 @@ class SocketConnectHelper {
         });
 
         if(data.array[0].value ==0x34){
-         jpegQueue.enqueue(seq, byteData, imgListener);
+          jpegQueue.enqueue(seq, byteData, imgListener);
         }
 
         if(data.array[0].value == 0x21){

@@ -1,4 +1,4 @@
-// ignore_for_file: non_constant_identifier_names, avoid_print
+// ignore_for_file: non_constant_identifier_names, avoid_log
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
@@ -80,7 +80,7 @@ class _MyHomePageState extends State<MyHomePage>
   List<int> toBytes(List<int> bytes, int from, int amount) {
     return bytes.sublist(from, amount);
   }
-
+  late SocketConnectHelper socketConnectHelper ;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -96,35 +96,42 @@ class _MyHomePageState extends State<MyHomePage>
           FloatingActionButton(
             // onPressed: _incrementCounter,
             onPressed: () async {
-              final _player = RawSoundPlayer();
-              playAudio();
 
-              /* NetworkHelper networkHelper = NetworkHelper();
+
+               NetworkHelper networkHelper = NetworkHelper();
               ResponseGetInfo? responseGetInfo = await networkHelper.getInfo();
               if (responseGetInfo != null) {
 
-                _playerPCMI16
-                    .initialize(
-                  bufferSize: 724,
-                  nChannels: 1,
-                  sampleRate: 8000,
-                  pcmType: RawSoundPCMType.PCMI16,
-                )
-                    .then((value) {
-                  setState(() {
-                    // Trigger rebuild to update UI
-                  });
-                });
+                // _playerPCMI16
+                //     .initialize(
+                //   bufferSize: 724,
+                //   nChannels: 1,
+                //   sampleRate: 8000,
+                //   pcmType: RawSoundPCMType.PCMI16,
+                // )
+                //     .then((value) {
+                //   setState(() {
+                //     // Trigger rebuild to update UI
+                //   });
+                // });
 
                 // audioQueue.startDecoding(this);
-                SocketConnectHelper socketConnectHelper = SocketConnectHelper(
+                socketConnectHelper = SocketConnectHelper(
                     host: responseGetInfo.host,
                     port: int.parse(responseGetInfo.port.toString()),
                     sessionId: responseGetInfo.sessionId,
                     keyEncepted: responseGetInfo.key);
+
+               try{
+                 _toggleProcessing() ;
+               }catch(e){}
+
                 socketConnectHelper.connect(this , audioQueue);
 
-              }*/
+
+
+
+              }
             },
             tooltip: 'Increment',
             child: const Icon(Icons.add),
@@ -142,7 +149,7 @@ class _MyHomePageState extends State<MyHomePage>
     // TODO: implement onImageReceived
   }
 
-  playAudio() async {
+ /* playAudio() async {
     _playerPCMI16.initialize(
       // Buffer size of the underlying audio track (Android only)
       bufferSize: 4096 << 3,
@@ -158,7 +165,7 @@ class _MyHomePageState extends State<MyHomePage>
       if (!_playerPCMI16.isPlaying) {
         await _playerPCMI16.play();
       }
-      // print("AudiLength${audio.length}");
+      // log("AudiLength${audio.length}");
       if (_playerPCMI16.isPlaying) {
         _playerPCMI16.feed(Uint8List.fromList([
           -32124,
@@ -326,14 +333,14 @@ class _MyHomePageState extends State<MyHomePage>
         _playerPCMI16.feed(_voice!);
       }
     });
-  }
+  }*/
 
   @override
   Future<void> onAudioReceived(List<int> audio) async {
     if (!_playerPCMI16.isPlaying) {
       await _playerPCMI16.play();
     }
-    print("AudiLength${audio.length}");
+    log("AudiLength${audio.length}");
     if (_playerPCMI16.isPlaying) {
       _playerPCMI16.feed(Uint8List.fromList([
         -32124,
@@ -507,20 +514,20 @@ class _MyHomePageState extends State<MyHomePage>
   VoiceProcessor voiceProcessor = VoiceProcessor.getVoiceProcessor(512, 16000);
 
   void transmitMic() async {
-    print("= transmitMic = ");
+    log("= transmitMic = ");
 
     try {
       if (await voiceProcessor.hasRecordAudioPermission() ?? false) {
         // _voiceProcessor.addListener((buffer) {
-        //   print("Listener received buffer of size ${buffer}!");
+        //   log("Listener received buffer of size ${buffer}!");
         // });
 
         // await _voiceProcessor.start();
       } else {
-        print("Recording permission not granted");
+        log("Recording permission not granted");
       }
     } on PlatformException catch (ex) {
-      print("Failed to start recorder: " + ex.toString());
+      log("Failed to start recorder: $ex");
     }
   }
 
@@ -556,10 +563,10 @@ class _MyHomePageState extends State<MyHomePage>
           _isProcessing = true;
         });
       } else {
-        print("Recording permission not granted");
+        log("Recording permission not granted");
       }
     } on PlatformException catch (ex) {
-      print("Failed to start recorder: " + ex.toString());
+      log("Failed to start recorder: $ex");
     } finally {
       setState(() {
         _isButtonDisabled = false;
@@ -568,7 +575,7 @@ class _MyHomePageState extends State<MyHomePage>
   }
 
   void _onBufferReceived(eventData) {
-    print("Listener 1 received buffer of size ${eventData.length}!");
+    log("Listener 1 received buffer of size ${eventData.length}!");
     log("Listener 2 received buffer   ${eventData} !");
     transmitAudioData(eventData);
   }
@@ -578,7 +585,7 @@ class _MyHomePageState extends State<MyHomePage>
 
   transmitAudioData(audioData) {
     if (audioData.length != 160) {
-      print("Transmit must be of size 160");
+      log("Transmit must be of size 160");
       return;
     }
     Uint8List ulaw = Uint8List(160);
@@ -586,7 +593,7 @@ class _MyHomePageState extends State<MyHomePage>
       // conversion via mapping table from pcm to u-law 8kHz
       ulaw[i] = AudioQueue.l2u[audioData[i] & 0xffff];
     }
-    print("== ulaw ==   ${ulaw.toList()}");
+    log("== ulaw ==   ${ulaw.toList()}");
     Uint8List audioOutPacket = Uint8List(164);
     int i = 0;
     audioOutPacket[i++] = UdpConstants.PACKET_ULAW.value; // 33
@@ -596,12 +603,12 @@ class _MyHomePageState extends State<MyHomePage>
     List.copyRange(audioOutPacket, 4, ulaw);
     // audioOutPacket.addAll(ulaw);
     audioTransmitSequenceNumber++;
-    print("== audioOutPacket ==   ${audioOutPacket.toList()}");
-    // try {
-      sendEncryptedPacket(audioOutPacket);
-    // } catch (e) {
-    //   print("TRY CACH ERROE  $e");
-    // }
+    log("== audioOutPacket ==   ${audioOutPacket.toList()}");
+    try {
+    sendEncryptedPacket(audioOutPacket);
+    } catch (e) {
+      log("TRY CACH ERROE  $e");
+    }
   }
 
   String key = '';
@@ -615,25 +622,28 @@ class _MyHomePageState extends State<MyHomePage>
       nonceData[i] = (encryptionNonce >> (i * 8));
     }
 
-    // Uint8List cypherUnit8List = Sodium.cryptoAeadChacha20poly1305Encrypt( data, null, null, nonceData.buffer.asUint8List(), Uint8List.fromList(key.codeUnits));
-    Uint8List cypherUnit8List = Sodium.cryptoAeadChacha20poly1305Encrypt( data, null, null, nonceData, Uint8List.fromList([99, 57, 48, 56, 50, 102, 99, 102, 50, 49, 57, 52, 54, 99, 98, 57, 55, 56, 54, 101, 101, 54, 99, 52, 100, 54, 57, 52, 56, 51, 55, 49]));
+    String keyEncrypt = socketConnectHelper.keyEncepted;
+    Uint8List keyUin8List = Uint8List.fromList(keyEncrypt.codeUnits);
+    print("keyUin8List = ${keyUin8List.toList()}\n");
+    Uint8List cypherUnit8List =
+        Sodium.cryptoAeadChacha20poly1305Encrypt(data, null, null, nonceData, keyUin8List);
 
-    print("cypherUnit8List    ${cypherUnit8List.toList()}");
+    log("cypherUnit8List    ${cypherUnit8List.toList()}");
 
-    Uint8List encryptedPacket =  Uint8List(cypherUnit8List.length + nonceData.length + 1);
-    // encryptedPacket = nonceData.sublist(0);
-    // encryptedPacket = nonceData.sublist(0);
-    // encryptedPacket = nonceData.sublist(0);
-    List.copyRange(encryptedPacket, 0, cypherUnit8List, nonceData.length+1, cypherUnit8List.length) ;
-    List.copyRange(encryptedPacket, 0, nonceData, nonceData.length) ;
+    Uint8List encryptedPacket = Uint8List(cypherUnit8List.length + nonceData.length + 1); // 189
+
     encryptedPacket[0] = UdpConstants.PACKET_ENCRYPTION_TYPE_1.value; // -31 && 225
+    List.copyRange(encryptedPacket, 1, nonceData);
+    List.copyRange(encryptedPacket, nonceData.length, cypherUnit8List);
 
-    print("encryptedPacket    ${encryptedPacket.toList()}");
+    log("encryptedPacket    ${encryptedPacket.toList()}");
+
+    socketConnectHelper.sendPacket(encryptedPacket);
+
     encryptionNonce++;
-
   }
 
-  Uint8List? _voice;
+  // Uint8List? _voice;
 
   void _onBufferReceived2(eventData) {
     //  log("Listener 2 received buffer of size ${eventData}!");
@@ -641,7 +651,7 @@ class _MyHomePageState extends State<MyHomePage>
 
   void _onErrorReceived(dynamic eventData) {
     String errorMsg = eventData as String;
-    print("_onErrorReceived   $errorMsg");
+    log("_onErrorReceived   $errorMsg");
   }
 
   Future<void> _stopProcessing() async {
@@ -661,11 +671,14 @@ class _MyHomePageState extends State<MyHomePage>
   }
 
   void _toggleProcessing() async {
-    if (_isProcessing) {
-      await _stopProcessing();
-    } else {
-      await _startProcessing();
-    }
+    log("toggleProcessing");
+    await _startProcessing();
+
+    // if (_isProcessing) {
+    //   await _stopProcessing();
+    // } else {
+    //   await _startProcessing();
+    // }
   }
 
   Widget _buildToggleProcessingButton() {
