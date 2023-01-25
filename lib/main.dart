@@ -1,24 +1,16 @@
 // ignore_for_file: non_constant_identifier_names, avoid_print
 import 'dart:async';
-import 'dart:collection';
 import 'dart:convert';
-import 'dart:developer';
-import 'dart:math' as Math;
 import 'dart:typed_data';
-import 'package:at_commons/at_commons.dart';
-import 'package:bit_array/bit_array.dart';
-import 'package:byte_util/byte.dart';
-import 'package:byte_util/byte_array.dart';
-import 'package:dio/dio.dart';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_sodium/flutter_sodium.dart';
+import 'package:flutter_sound/flutter_sound.dart';
 import 'package:get/get.dart';
 import 'package:raw_sound/raw_sound_player.dart';
+// import 'package:sound_stream/sound_stream.dart';
 import 'package:untitled1_flutter/audio_queue.dart';
 import 'package:untitled1_flutter/jpeg_queue.dart';
 import 'package:untitled1_flutter/socket_connect_send_receive.dart';
-// import 'package:image/image.dart';
 
 import 'image_load.dart';
 import 'network_helper.dart';
@@ -31,7 +23,7 @@ void main() {
 
 //
 String token =
-    "Bearer c80b07efad87ced9561178c13fcda0ba4112bf5b0b793f434c50ff61e457f0ae";
+    "Bearer 3cf5e05d6b71acd38e30109dd658ba698213904bb159ec8fc4f75dfcfafb7817";
 
 //
 class MyApp extends StatelessWidget {
@@ -64,21 +56,50 @@ class _MyHomePageState extends State<MyHomePage>
     implements ImgListener, AudioListener {
   int _counter = 0;
 
+  // final PlayerStream _player = PlayerStream();
+
+  late StreamSubscription _playerStatus;
+
   AudioQueue audioQueue = AudioQueue();
   final _playerPCMI16 = RawSoundPlayer();
 
+  Rx<Uint8List> image = Uint8List(0).obs;
+  final FlutterSoundPlayer flutterSound =  FlutterSoundPlayer(voiceProcessing:true );
 
-  Rx<Uint8List> image = Uint8List(0).obs ;
-  // Uint8List? image;
 
-  late final AnimationController _controller = AnimationController(
-    duration: const Duration(milliseconds: 200),
-    vsync: this,
-  )..repeat(reverse: true);
-  late final Animation<double> _animation = CurvedAnimation(
-    parent: _controller,
-    curve: Curves.easeIn,
-  );
+  @override
+  void initState() {
+    super.initState();
+    initPlugin();
+  }
+
+  Future<void> initPlugin() async {
+
+    // int intSize = await FlutterSound;
+    // print("Buffer size: $intSize");
+
+
+   await _playerPCMI16
+        .initialize(
+     bufferSize: 4,
+      nChannels: 1,
+      sampleRate: 8000,
+      pcmType: RawSoundPCMType.PCMI16,
+    );
+   //  await flutterSound.openPlayer(enableVoiceProcessing: true);
+   //  await flutterSound.setVolume(1.0);
+   //  await flutterSound.startPlayerFromStream( codec: Codec.pcm16, sampleRate: 8000, numChannels: 1 );
+
+    // _playerStatus = _player.status.listen((status) {
+    // });
+    //
+    // await Future.wait([
+    //   _player.initialize(sampleRate: 8000),
+    // ]);
+
+    // await _player.start();
+
+  }
 
   Uint8List toUnit8List(List<int> data) {
     return Uint8List.fromList(data);
@@ -103,7 +124,7 @@ class _MyHomePageState extends State<MyHomePage>
                     width: MediaQuery.of(context).size.width,
                     height: 500,
                     fit: BoxFit.contain,
-              gaplessPlayback:true ,
+                    gaplessPlayback: true,
                   ));
       }),
       floatingActionButton: Row(
@@ -112,39 +133,18 @@ class _MyHomePageState extends State<MyHomePage>
           FloatingActionButton(
             // onPressed: _incrementCounter,
             onPressed: () async {
+
+
               NetworkHelper networkHelper = NetworkHelper();
               ResponseGetInfo? responseGetInfo = await networkHelper.getInfo();
               if (responseGetInfo != null) {
-
-                _playerPCMI16
-                    .initialize(
-                  bufferSize: 724,
-                  nChannels: 1,
-                  sampleRate: 8000,
-                  pcmType: RawSoundPCMType.PCMI16,
-                )
-                    .then((value) {
-                  setState(() {
-                    // Trigger rebuild to update UI
-                  });
-                });
-
-
-                // audioQueue.startDecoding(this);
-
-
                 SocketConnectHelper socketConnectHelper = SocketConnectHelper(
                     host: responseGetInfo.host,
                     port: int.parse(responseGetInfo.port.toString()),
                     sessionId: responseGetInfo.sessionId,
                     keyEncepted: responseGetInfo.key);
-
-
-
-                socketConnectHelper.connect(this , audioQueue);
-
-               // await playAudio();
-
+                socketConnectHelper.connect(this, audioQueue);
+               await audioQueue.startDecoding(this);
               }
             },
             tooltip: 'Increment',
@@ -167,39 +167,49 @@ class _MyHomePageState extends State<MyHomePage>
     //   print("Running in the UI thread");
     // });
     // Future.wait((){});
-      print("ImageReieved");
-      this.image.value = image;
+    print("ImageReieved");
+    this.image.value = image;
 
     // TODO: implement onImageReceived
   }
 
-
-  playAudio() async{
-
-    Timer.periodic(Duration(milliseconds: 500), (timer) async {
-      if(!_playerPCMI16.isPlaying){
-        await _playerPCMI16.play();
-      }
-      // print("AudiLength${audio.length}");
-      if(_playerPCMI16.isPlaying){
-        _playerPCMI16.feed(Uint8List.fromList([-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124]));
-      }
-    });
+  playAudio() async {
 
 
-
+    // int i =0;
+    // Timer.periodic(const Duration(microseconds: 10), (timer) async {
+    //   if (!_playerPCMI16.isPlaying) {
+    //     await _playerPCMI16.play();
+    //   }
+    //   print("AudiLength${allAudioList[i]}");
+    //   // ;
+    //   if (_playerPCMI16.isPlaying) {
+    //     _playerPCMI16.feed(Uint8List.fromList(allAudioList[i]));
+    //     if(allAudioList.length -i ==1){
+    //       i=0;
+    //     }
+    //     else{
+    //       i++;
+    //     }
+    //   }
+    // });
   }
+
   @override
   Future<void> onAudioReceived(List<int> audio) async {
 
-    if(!_playerPCMI16.isPlaying){
-   await _playerPCMI16.play();
+
+
+    // flutterSound.feedFromStream(Uint8List.fromList(audio));
+    // _player.writeChunk(Uint8List.fromList(audio));
+
+    if (!_playerPCMI16.isPlaying) {
+      await _playerPCMI16.play();
     }
-    print("AudiLength${audio.length}");
-    if(_playerPCMI16.isPlaying){
-      _playerPCMI16.feed(Uint8List.fromList([-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124]));
+    print("AudiLength${audio}");
+    if (_playerPCMI16.isPlaying) {
+      _playerPCMI16.feed(Uint8List.fromList(audio));
     }
     // TODO: implement onAudioReceived
   }
 }
-

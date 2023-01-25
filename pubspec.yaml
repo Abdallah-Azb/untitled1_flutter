@@ -48,7 +48,14 @@ dependencies:
   collection:
   get: ^4.6.5
   raw_sound: ^0.3.0+1
+  async_locks: ^3.1.0
+  flutter_sound: ^9.2.13
 
+
+  sound_stream:
+    git:
+      url: https://github.com/AlexanderHorielko/flutter-sound-stream.git
+      ref: android-fix
 
 dev_dependencies:
   flutter_test:

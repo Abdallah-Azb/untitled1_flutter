@@ -1,10 +1,9 @@
-import 'dart:async';
 import 'dart:collection';
 import 'dart:math';
 import 'dart:typed_data';
+import 'package:async_locks/async_locks.dart';
 import 'package:collection/collection.dart';
 import 'package:synchronized/extension.dart';
-import 'package:synchronized/synchronized.dart';
 
 class AudioQueue {
   static const List<int> u2l = [
@@ -527,103 +526,148 @@ class AudioQueue {
 
   static final Int8List l2u = generateL2u();
 
+  final _semaphore =Semaphore(1);
   PriorityQueue<Frame> buffer = PriorityQueue<Frame>();
   Queue<Frame> decodeQueue = ListQueue<Frame>();
-  Lock  _lock = Lock();
   int audioCount = 0;
   int lastAudioSeq = 0;
   int lastDelivered = 0;
 
-  void reset()  {
+  Future<void> reset()  async {
 
-     decodeQueue.synchronized(() {
+    await _semaphore.acquire().then((value) {
       buffer.clear();
       decodeQueue.clear();
       audioCount = 0;
       lastAudioSeq = 0;
+      _semaphore.release();
     });
   }
 
-  void enqueue(int seq, Int8List ulaw, int r)  {
-
-    // print("Recieved is${ulaw}");
+  Future<void> enqueue(int seq, Int8List ulaw, int r)  async {
 
     if (seq < 50 * 5 && lastDelivered > seq + 5 * 50) {
-      // assume reset
       lastDelivered = 0;
     }
-
     if (seq < lastDelivered) {
       return;
     }
+
     final Frame f = Frame(seq, ulaw, r);
     if (buffer.contains(f)) {
+      print("I'm returning");
       return;
     }
 
+
     buffer.add(f);
-    while (buffer.isNotEmpty && buffer.first.seq == lastDelivered + 1 ||
-        buffer.length > 30) {
+    while (buffer.isNotEmpty && buffer.first.seq == lastDelivered + 1 || buffer.length > 30) {
       audioCount++;
       final Frame sf = buffer.removeFirst();
       lastDelivered = sf.seq;
 
-      decodeQueue.synchronized(() {
+      await _semaphore.acquire().then((value) {
         decodeQueue.add(sf);
+        _semaphore.release();
       });
+
     }
   }
 
-  void startDecoding(AudioListener audioListener) {
-    reset();
+  Future<void> startDecoding(AudioListener audioListener) async {
+   await reset();
+    Future.microtask(() async {
+      try {
+        while (true) {
+          Frame ulawFrame;
+          await _semaphore.acquire();
+          if (decodeQueue.isEmpty) {
+            _semaphore.release();
+            continue;
+              // await Future.delayed(const Duration(microseconds: 5));
+          }
+          else {
+            ulawFrame = decodeQueue.removeFirst();
+            _semaphore.release();
+            int ulawLength = ulawFrame.ulaw.length;
+            int downsampling = 1;
+            List<int> pcm = List<int>.filled(ulawLength + ulawLength % downsampling , 0, growable: false);
+            int gainFactor = 1;
+            for (int p = 0, u = 0; p < pcm.length; p++, u += downsampling) {
+              int e = (u2l[ulawFrame.ulaw[min(u, ulawLength - 1)] & 0xff] * gainFactor);
+              if (e > 0x7fff) {
+                e = 0x7fff;
+              } else if (e < -0x7fff) {
+                e = -0x7fff;
+              }
+              pcm[p] = e;
+            }
+            print("AudioAfter , ${pcm}");
+            audioListener.onAudioReceived(pcm);
+            // _semaphore.release();
+          }
 
-    audioListener.onAudioReceived([-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124,-32124]);
-
-
-    // try{
-    //   Timer.periodic(const Duration(microseconds: 10), (timer) {
-    //
-    //     Frame? ulawFrame;
-    //     decodeQueue.synchronized(() async {
-    //       if (decodeQueue.isEmpty) {
-    //
-    //         Future.delayed(const Duration(seconds: 3), () {});
-    //       }
-    //       try{
-    //         ulawFrame = decodeQueue.removeFirst();
-    //       }
-    //       catch(e){
-    //        
-    //       }
-    //
-    //     });
-    //
-    //     int ulawLength = ulawFrame!.ulaw.length;
-    //     int downsampling = 1;
-    //     List<int> pcm = [];
-    //
-    //     int gainFactor = 1;
-    //     for (int p = 0, u = 0; p < pcm.length; p++, u += downsampling) {
-    //       int e = (u2l[ulawFrame!.ulaw[min(u, ulawLength - 1)] & 0xff] *
-    //           gainFactor);
-    //
-    //       if (e > 0x7fff) {
-    //         e = 0x7fff;
-    //       } else if (e < -0x7fff) {
-    //         e = -0x7fff;
-    //       }
-    //       pcm[p] = e;
-    //     }
-    //     audioListener.onAudioReceived(pcm);
-    //
-    //   }) ;
-    // }catch(e){
-    //   print("ExceptionIs${e}");
-    // }
-
-
-
+        }
+      } catch (e) {
+        print(e);
+      }
+    });
   }
+
+  // void startDecoding(AudioListener audioListener) {
+  //   reset();
+  //
+  //
+  //     Future.microtask(() {
+  //
+  //     });
+  //
+  //   // try{
+  //   //   Timer.periodic(const Duration(microseconds: 10), (timer) {
+  //   //
+  //   //     Frame? ulawFrame;
+  //   //     decodeQueue.synchronized(() async {
+  //   //       if (decodeQueue.isEmpty) {
+  //   //
+  //   //         Future.delayed(const Duration(seconds: 3), () {});
+  //   //       }
+  //   //       try{
+  //   //         ulawFrame = decodeQueue.removeFirst();
+  //   //       }
+  //   //       catch(e){
+  //   //
+  //   //       }
+  //   //
+  //   //     });
+  //   //
+  //   //     int ulawLength = ulawFrame!.ulaw.length;
+  //   //     int downsampling = 1;
+  //   //     List<int> pcm = [];
+  //   //
+  //   //     int gainFactor = 1;
+  //   //     for (int p = 0, u = 0; p < pcm.length; p++, u += downsampling) {
+  //   //       int e = (u2l[ulawFrame!.ulaw[min(u, ulawLength - 1)] & 0xff] *
+  //   //           gainFactor);
+  //   //
+  //   //       if (e > 0x7fff) {
+  //   //         e = 0x7fff;
+  //   //       } else if (e < -0x7fff) {
+  //   //         e = -0x7fff;
+  //   //       }
+  //   //       pcm[p] = e;
+  //   //     }
+  //   //     audioListener.onAudioReceived(pcm);
+  //   //
+  //   //   }) ;
+  //   // }catch(e){
+  //   //   print("ExceptionIs${e}");
+  //   // }
+  //
+  //
+  //
+  // }
+
+
 
   static Int8List generateL2u() {
     Int8List result = Int8List(64 * 1024);
