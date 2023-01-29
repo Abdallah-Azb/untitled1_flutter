@@ -363,6 +363,29 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+					"-framework",
+					"\"AVFoundation\"",
+					"-framework",
+					"\"MediaPlayer\"",
+					"-framework",
+					"\"flutter_sodium\"",
+					"-framework",
+					"\"flutter_sound\"",
+					"-framework",
+					"\"flutter_sound_core\"",
+					"-framework",
+					"\"path_provider_ios\"",
+					"-framework",
+					"\"raw_sound\"",
+					"-framework",
+					"\"sound_stream\"",
+					"-force_load",
+					"${PODS_ROOT}/../.symlinks/plugins/flutter_sodium/ios/libsodium.a",
+					"-lc++",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.untitled1Flutter;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
@@ -493,6 +516,29 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+					"-framework",
+					"\"AVFoundation\"",
+					"-framework",
+					"\"MediaPlayer\"",
+					"-framework",
+					"\"flutter_sodium\"",
+					"-framework",
+					"\"flutter_sound\"",
+					"-framework",
+					"\"flutter_sound_core\"",
+					"-framework",
+					"\"path_provider_ios\"",
+					"-framework",
+					"\"raw_sound\"",
+					"-framework",
+					"\"sound_stream\"",
+					"-force_load",
+					"${PODS_ROOT}/../.symlinks/plugins/flutter_sodium/ios/libsodium.a",
+					"-lc++",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.untitled1Flutter;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
@@ -516,6 +562,29 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+					"-framework",
+					"\"AVFoundation\"",
+					"-framework",
+					"\"MediaPlayer\"",
+					"-framework",
+					"\"flutter_sodium\"",
+					"-framework",
+					"\"flutter_sound\"",
+					"-framework",
+					"\"flutter_sound_core\"",
+					"-framework",
+					"\"path_provider_ios\"",
+					"-framework",
+					"\"raw_sound\"",
+					"-framework",
+					"\"sound_stream\"",
+					"-force_load",
+					"${PODS_ROOT}/../.symlinks/plugins/flutter_sodium/ios/libsodium.a",
+					"-lc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.untitled1Flutter;
 				PRODUCT_NAME = "$(TARGET_NAME)";

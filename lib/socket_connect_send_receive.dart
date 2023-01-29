@@ -27,6 +27,8 @@ class SocketConnectHelper {
   }) {
     if (host == "apiorun.doorbird.net") {
       host = "142.132.214.220";
+    }  if (host == "apiulaw.doorbird.net") {
+      host = "94.130.65.54";
     }
   }
 
@@ -49,11 +51,8 @@ class SocketConnectHelper {
     datagramPacket =
         Datagram(Uint8List(16 * 1024), InternetAddress(host, type: InternetAddressType.any), 6999);
    //
-
-    print("connect");
    Timer.periodic(const Duration(microseconds: 5), (timer) async {
      try{
-       print("try");
        if(lastSubscribe + (currentFlag == requestedFlag ? 15000 : 500)< DateTime.now().millisecondsSinceEpoch ){
          lastSubscribe = DateTime.now().millisecondsSinceEpoch;
          _sendSubscribe(true);
@@ -66,14 +65,12 @@ class SocketConnectHelper {
        }
 
      }catch(e){
-       print("catch");
 
        lastSubscribe =0;
        try{
          datagramSocket = datagramSocket.port >0 ? await RawDatagramSocket.bind(InternetAddress.anyIPv4, datagramSocket.port) : await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
      }
      catch(e){
-       print("catch2");
 
        datagramSocket=  await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
      }
@@ -131,13 +128,11 @@ class SocketConnectHelper {
   }
 
   _sendPacket(List<int> buffer) async {
-    print("SendPacket$buffer");
     datagramSocket.send(buffer, InternetAddress(host), port);
   }
 
   //
   void _sendSubscribe(bool subscribe) {
-    print("sendSu");
     // var currentFlags = 0;
     // var requestedFlags = 0;
     // ByteData subscribe = ByteData(0);
@@ -211,7 +206,7 @@ class SocketConnectHelper {
         if(data.array[0].value ==0x34){
          jpegQueue.enqueue(seq, byteData, imgListener);
         }
-
+        
         if(data.array[0].value == 0x21){
           print("AudioREceived");
           int length = 160;
@@ -224,7 +219,8 @@ class SocketConnectHelper {
             ulaw.setRange(0, length, data.bytes.sublist(i));
             // System.arraycopy(data, i, ulaw, 0, length);
             i += length;
-            print("AudioBefore${ulaw}");
+            // print("AudioBefore${ulaw}");
+
             audioQueue.enqueue(seq, ulaw, r);
           }
         }

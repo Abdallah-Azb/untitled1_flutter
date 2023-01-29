@@ -1,18 +1,19 @@
 // ignore_for_file: non_constant_identifier_names, avoid_print
 import 'dart:async';
-import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_sodium/flutter_sodium.dart';
 import 'package:flutter_sound/flutter_sound.dart';
+import 'package:flutter_sound/public/flutter_sound_player.dart';
 import 'package:get/get.dart';
 import 'package:raw_sound/raw_sound_player.dart';
+
 // import 'package:sound_stream/sound_stream.dart';
 import 'package:untitled1_flutter/audio_queue.dart';
 import 'package:untitled1_flutter/jpeg_queue.dart';
 import 'package:untitled1_flutter/socket_connect_send_receive.dart';
 
-import 'image_load.dart';
 import 'network_helper.dart';
 
 void main() {
@@ -21,11 +22,7 @@ void main() {
   runApp(const MyApp());
 }
 
-//
-String token =
-    "Bearer 3cf5e05d6b71acd38e30109dd658ba698213904bb159ec8fc4f75dfcfafb7817";
 
-//
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
@@ -42,6 +39,8 @@ class MyApp extends StatelessWidget {
   }
 }
 
+const methodChannel = MethodChannel('com.kafd.intercom');
+
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key, required this.title}) : super(key: key);
 
@@ -51,21 +50,24 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+
 class _MyHomePageState extends State<MyHomePage>
-    with TickerProviderStateMixin
     implements ImgListener, AudioListener {
   int _counter = 0;
 
   // final PlayerStream _player = PlayerStream();
 
+  List<int> audioPart = [];
   late StreamSubscription _playerStatus;
 
   AudioQueue audioQueue = AudioQueue();
   final _playerPCMI16 = RawSoundPlayer();
 
   Rx<Uint8List> image = Uint8List(0).obs;
-  final FlutterSoundPlayer flutterSound =  FlutterSoundPlayer(voiceProcessing:true );
 
+  FlutterSoundPlayer player = FlutterSoundPlayer();
+
+  // final FlutterSoundPlayer flutterSound =  FlutterSoundPlayer(voiceProcessing:false);
 
   @override
   void initState() {
@@ -75,20 +77,19 @@ class _MyHomePageState extends State<MyHomePage>
 
   Future<void> initPlugin() async {
 
+    // await player.openPlayer(enableVoiceProcessing: true);
+    // await player.startPlayerFromStream(
+    //     codec: Codec.pcm16, numChannels: 1, sampleRate: 8000);
+
     // int intSize = await FlutterSound;
-    // print("Buffer size: $intSize");
-
-
-   await _playerPCMI16
-        .initialize(
-     bufferSize: 4,
-      nChannels: 1,
-      sampleRate: 8000,
-      pcmType: RawSoundPCMType.PCMI16,
+    // print("Buffer size: $intSize");4
+    await _playerPCMI16.initialize(
+      sampleRate: 4000
     );
-   //  await flutterSound.openPlayer(enableVoiceProcessing: true);
-   //  await flutterSound.setVolume(1.0);
-   //  await flutterSound.startPlayerFromStream( codec: Codec.pcm16, sampleRate: 8000, numChannels: 1 );
+    await _playerPCMI16.setVolume(1.0);
+    //  await flutterSound.openPlayer(enableVoiceProcessing: false);
+    //  await flutterSound.setVolume(1.0);
+    //  await flutterSound.startPlayerFromStream( codec: Codec.pcm16, sampleRate: 4000, numChannels: 1 );
 
     // _playerStatus = _player.status.listen((status) {
     // });
@@ -98,7 +99,6 @@ class _MyHomePageState extends State<MyHomePage>
     // ]);
 
     // await _player.start();
-
   }
 
   Uint8List toUnit8List(List<int> data) {
@@ -133,8 +133,6 @@ class _MyHomePageState extends State<MyHomePage>
           FloatingActionButton(
             // onPressed: _incrementCounter,
             onPressed: () async {
-
-
               NetworkHelper networkHelper = NetworkHelper();
               ResponseGetInfo? responseGetInfo = await networkHelper.getInfo();
               if (responseGetInfo != null) {
@@ -144,7 +142,8 @@ class _MyHomePageState extends State<MyHomePage>
                     sessionId: responseGetInfo.sessionId,
                     keyEncepted: responseGetInfo.key);
                 socketConnectHelper.connect(this, audioQueue);
-               await audioQueue.startDecoding(this);
+               await audioQueue.reset();
+                await audioQueue.startDecoding(this);
               }
             },
             tooltip: 'Increment',
@@ -173,43 +172,37 @@ class _MyHomePageState extends State<MyHomePage>
     // TODO: implement onImageReceived
   }
 
-  playAudio() async {
-
-
-    // int i =0;
-    // Timer.periodic(const Duration(microseconds: 10), (timer) async {
-    //   if (!_playerPCMI16.isPlaying) {
-    //     await _playerPCMI16.play();
-    //   }
-    //   print("AudiLength${allAudioList[i]}");
-    //   // ;
-    //   if (_playerPCMI16.isPlaying) {
-    //     _playerPCMI16.feed(Uint8List.fromList(allAudioList[i]));
-    //     if(allAudioList.length -i ==1){
-    //       i=0;
-    //     }
-    //     else{
-    //       i++;
-    //     }
-    //   }
-    // });
-  }
 
   @override
   Future<void> onAudioReceived(List<int> audio) async {
-
-
-
     // flutterSound.feedFromStream(Uint8List.fromList(audio));
     // _player.writeChunk(Uint8List.fromList(audio));
 
-    if (!_playerPCMI16.isPlaying) {
-      await _playerPCMI16.play();
-    }
-    print("AudiLength${audio}");
-    if (_playerPCMI16.isPlaying) {
-      _playerPCMI16.feed(Uint8List.fromList(audio));
-    }
+    // print("LEngth${audio.length}");
+    //
+    // audioPart.addAll(audio);
+    // if(audioPart.length == 320){
+    //
+    //
+    // } if (!_playerPCMI16.isPlaying) {
+    //   await _playerPCMI16.play();
+    // }
+    // print("AudiLength${audioPart.length}");
+    // if (_playerPCMI16.isPlaying) {
+    //   _playerPCMI16.feed(Uint8List.fromList(audio));
+    //   audioPart.clear();
+    // }
+    //
+
+
+    // player.foodSink!.add(FoodData(Uint8List.fromList(audio)));
+
+    methodChannel
+        .invokeMethod(
+        "playAudio",
+        {
+          "audioBuffer":audio,
+        });
     // TODO: implement onAudioReceived
   }
 }
