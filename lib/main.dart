@@ -1,391 +1,193 @@
-// ignore_for_file: non_constant_identifier_names, avoid_log
 import 'dart:async';
-import 'dart:collection';
-import 'dart:convert';
-import 'dart:developer';
-import 'dart:math' as Math;
+import 'dart:math';
+import 'dart:core';
 import 'dart:typed_data';
-import 'package:at_commons/at_commons.dart';
-import 'package:bit_array/bit_array.dart';
+
 import 'package:byte_util/byte.dart';
 import 'package:byte_util/byte_array.dart';
-import 'package:dio/dio.dart';
-import 'dart:io';
+import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/animation.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_sodium/flutter_sodium.dart';
-import 'package:flutter_voice_processor/flutter_voice_processor.dart';
-import 'package:get/get.dart';
-import 'package:raw_sound/raw_sound_player.dart';
-import 'package:untitled1_flutter/audio_queue.dart';
-import 'package:untitled1_flutter/jpeg_queue.dart';
+
+import 'package:mic_stream/mic_stream.dart';
+import 'package:mic_stream/mic_stream.dart';
 import 'package:untitled1_flutter/socket_connect_send_receive.dart';
 import 'package:untitled1_flutter/udp_constants.dart';
-// import 'package:image/image.dart';
 
-import 'image_load.dart';
+import 'audio_queue.dart';
 import 'network_helper.dart';
 
-void main() {
-  Sodium.init();
-
-  runApp(const MyApp());
+enum Command {
+  start,
+  stop,
+  change,
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
+void main() => runApp(MicStreamExampleApp());
+
+class MicStreamExampleApp extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
+  _MicStreamExampleAppState createState() => _MicStreamExampleAppState();
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
+class _MicStreamExampleAppState extends State<MicStreamExampleApp>
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+  Stream? stream;
+  late StreamSubscription listener;
+  List<int>? currentSamples = [];
+  List<int> visibleSamples = [];
+  int? localMax;
+  int? localMin;
 
-  final String title;
+  Random rng = new Random();
 
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
+  // Refreshes the Widget for every possible tick to force a rebuild of the sound wave
+  late AnimationController controller;
 
-class _MyHomePageState extends State<MyHomePage>
-    with TickerProviderStateMixin
-    implements ImgListener, AudioListener {
-  int _counter = 0;
+  Color _iconColor = Colors.white;
+  bool isRecording = false;
+  bool memRecordingState = false;
+  late bool isActive;
+  DateTime? startTime;
 
-  AudioQueue audioQueue = AudioQueue();
-  final _playerPCMI16 = RawSoundPlayer();
-
-  Rx<Uint8List> image = Uint8List(0).obs;
-
-  // Uint8List? image;
-
-  Uint8List toUnit8List(List<int> data) {
-    return Uint8List.fromList(data);
-  }
-
-  List<int> toBytes(List<int> bytes, int from, int amount) {
-    return bytes.sublist(from, amount);
-  }
-
-  late SocketConnectHelper socketConnectHelper;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _startBuild() ,
-            _stopBuild(),
-          ],
-        )
-      ),
-      floatingActionButton: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          FloatingActionButton(
-            onPressed: () async {
-              NetworkHelper networkHelper = NetworkHelper();
-              ResponseGetInfo? responseGetInfo = await networkHelper.getInfo();
-              if (responseGetInfo != null) {
-
-                socketConnectHelper = SocketConnectHelper(
-                    host: responseGetInfo.host,
-                    port: int.parse(responseGetInfo.port.toString()),
-                    sessionId: responseGetInfo.sessionId,
-                    keyEncepted: responseGetInfo.key);
-
-                socketConnectHelper.connect(this, audioQueue);
-              }
-            },
-            tooltip: 'Increment',
-            child: const Icon(Icons.add),
-          ),
-          //
-        ],
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
-  }
-
-  @override
-  void onImageReceived(Uint8List image) {
-    this.image.value = image;
-
-    // TODO: implement onImageReceived
-  }
-
-  @override
-  Future<void> onAudioReceived(List<int> audio) async {
-    if (!_playerPCMI16.isPlaying) {
-      await _playerPCMI16.play();
-    }
-    log("AudiLength${audio.length}");
-    if (_playerPCMI16.isPlaying) {
-      _playerPCMI16.feed(Uint8List.fromList([
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124,
-        -32124
-      ]));
-    }
-    // TODO: implement onAudioReceived
-  }
-
-  // transmitMic
-  int frameLength = 512;
-  int sampleRate = 16000;
-  VoiceProcessor voiceProcessor = VoiceProcessor.getVoiceProcessor(512, 16000);
-
-
-
-  bool _isButtonDisabled = false;
-  bool _isProcessing = false;
-  VoiceProcessor? _voiceProcessor;
-  Function? _removeListener;
-  Function? _removeListener2;
-  Function? _errorListener;
-
-  void _initVoiceProcessor() async {
-    _voiceProcessor = VoiceProcessor.getVoiceProcessor(160, 16000);
-  }
+  int page = 0;
+  List state = ["SoundWavePage", "IntensityWavePage", "InformationPage"];
 
   @override
   void initState() {
+    print("Init application");
     super.initState();
-    _initVoiceProcessor();
+    WidgetsBinding.instance!.addObserver(this);
+    setState(() {
+      initPlatformState();
+    });
   }
 
-  Future<void> _startProcessing() async {
+  void _controlPage(int index) => setState(() => page = index);
 
-    _removeListener = _voiceProcessor?.addListener(_onBufferReceived);
-    _errorListener = _voiceProcessor?.addErrorListener(_onErrorReceived);
-    try {
-      if (await _voiceProcessor?.hasRecordAudioPermission() ?? false) {
-        await _voiceProcessor?.start();
-
-      } else {
-        log("Recording permission not granted");
-      }
-    } on PlatformException catch (ex) {
-      log("Failed to start recorder: $ex");
-    } finally {
-
+  // Responsible for switching between recording / idle state
+  void _controlMicStream({Command command = Command.change}) async {
+    switch (command) {
+      case Command.change:
+        _changeListening();
+        break;
+      case Command.start:
+        _startListening();
+        break;
+      case Command.stop:
+        _stopListening();
+        break;
     }
   }
 
-  void _onBufferReceived(eventData) {
-    log("Listener 1 received buffer of size ${eventData.length}!");
-    log("Listener 2 received buffer   ${eventData} !");
-    transmitAudioData(eventData);
+  Future<bool> _changeListening() async => !isRecording ? await _startListening() : _stopListening();
+
+  late int bytesPerSample;
+  late int samplesPerSecond;
+
+  Future<bool> _startListening() async {
+    print("START LISTENING");
+    if (isRecording) return false;
+    // if this is the first time invoking the microphone()
+    // method to get the stream, we don't yet have access
+    // to the sampleRate and bitDepth properties
+    print("wait for stream");
+
+
+    NetworkHelper networkHelper = NetworkHelper();
+    ResponseGetInfo? responseGetInfo = await networkHelper.getInfo();
+    if (responseGetInfo != null) {
+
+      socketConnectHelper = SocketConnectHelper(
+          host: responseGetInfo.host,
+          port: int.parse(responseGetInfo.port.toString()),
+          sessionId: responseGetInfo.sessionId,
+          keyEncepted: responseGetInfo.key);
+
+      socketConnectHelper.connect();
+
+
+
+    // Default option. Set to false to disable request permission dialogue
+    MicStream.shouldRequestPermission(true);
+    stream = await MicStream.microphone(
+      audioSource: AudioSource.MIC,
+      sampleRate: 4000, //1000 * (rng.nextInt(50) + 30),
+      channelConfig: ChannelConfig.CHANNEL_IN_MONO,
+      audioFormat: AudioFormat.ENCODING_PCM_16BIT,
+    );
+
+    // after invoking the method for the first time, though, these will be available;
+    // It is not necessary to setup a listener first, the stream only needs to be returned first
+    print(
+        "Start Listening to the microphone, sample rate is ${await MicStream.sampleRate}, bit depth is ${await MicStream.bitDepth}, bufferSize: ${await MicStream.bufferSize}");
+    bytesPerSample = (await MicStream.bitDepth)! ~/ 8;
+    samplesPerSecond = (await MicStream.sampleRate)!.toInt();
+    localMax = null;
+    localMin = null;
+
+    listener = stream!.listen(( sample){
+      // List<int> sam = sample;
+      // print(sample.getRange(0, 160).length);
+      transmitAudioData(sample.getRange(0, 160).toList());
+
+    });
+    return true;
+    }else {
+      return false;
+    }
+
   }
+
 
   var encryptionNonce = 1;
   int audioTransmitSequenceNumber = 0;
+  transmitAudioData(List<int> audioData) {
 
-  transmitAudioData(audioData) {
     if (audioData.length != 160) {
-      log("Transmit must be of size 160");
+      print("Transmit must be of size 160");
+      // log("Transmit must be of size 160");
       return;
     }
-    Int8List ulaw = Int8List(160);
-    for (int i = 0; i < audioData.length; i++) {
+    print("start transmitAudioData");
+    Uint8List ulaw = Uint8List(160);
+
+    for (int i = 0; i < ulaw.length; i++) {
       // conversion via mapping table from pcm to u-law 8kHz
-      ulaw[i] = AudioQueue.l2u[audioData[i] & 0xffff];
+      ulaw[i] = AudioQueue.l2u[audioData.elementAt(i) & 0xffff];
     }
-    log("== ulaw ==   ${ulaw.toList()}");
-    Int8List audioOutPacket = Int8List(164);
+    print("== ulaw ==   ${ulaw.toList()}");
+    Uint8List audioOutPacket = Uint8List(164);
     int i = 0;
     audioOutPacket[i++] = UdpConstants.PACKET_ULAW.value; // 33
     audioOutPacket[i++] = (audioTransmitSequenceNumber >> 16); // 0
     audioOutPacket[i++] = (audioTransmitSequenceNumber >> 8); // 0
     audioOutPacket[i++] = (audioTransmitSequenceNumber);
-    List.copyRange(audioOutPacket, 4, ulaw);
+
+    audioOutPacket.setRange(4, ulaw.length + 4, ulaw);
+
+    // List.copyRange(audioOutPacket, 4, ulaw);
     // audioOutPacket.addAll(ulaw);
     audioTransmitSequenceNumber++;
-    log("== audioOutPacket ==   ${audioOutPacket.toList()}");
-    try {
-      sendEncryptedPacket(Uint8List.fromList(audioOutPacket));
-    } catch (e) {
-      log("TRY CACH ERROE  $e");
-    }
+    // log("== audioOutPacket ==   ${audioOutPacket.toList()}");
+    // try {
+    print("audioOutPacket >>>   $audioOutPacket");
+      sendEncryptedPacket(audioOutPacket);
+    // } catch (e) {
+    //   log("TRY CACH ERROE  $e");
+    // }
   }
-
-  String key = '';
+  late SocketConnectHelper socketConnectHelper;
 
   sendEncryptedPacket(Uint8List data) {
+    print("sendEncryptedPacket >>>   $data");
     if (data.length < 4) {
       throw Exception("invalid packet:   ${data.length}");
     }
+
     Uint8List nonceData = Uint8List(8);
     for (int i = 0; i < nonceData.length; i++) {
       nonceData[i] = (encryptionNonce >> (i * 8));
@@ -395,62 +197,235 @@ class _MyHomePageState extends State<MyHomePage>
     Uint8List keyUin8List = Uint8List.fromList(keyEncrypt.codeUnits);
     // print("keyUin8List = ${keyUin8List.toList()}\n");
     Uint8List cypherUnit8List =
-        Sodium.cryptoAeadChacha20poly1305Encrypt(data, null, null, nonceData, keyUin8List);
+    Sodium.cryptoAeadChacha20poly1305Encrypt(data, null, null, ByteArray(nonceData).bytes, ByteArray(keyUin8List).bytes);
 
     // log("cypherUnit8List    ${cypherUnit8List.toList()}");
 
-    Uint8List encryptedPacket = Uint8List(cypherUnit8List.length + nonceData.length + 1); // 189
+    // List<int> encryptedPacket = List.filled(cypherUnit8List.length + nonceData.length + 1 , 0 , growable: false); // 189
+    Uint8List encryptedPacket = Uint8List(cypherUnit8List.length + nonceData.length + 1 , ); // 189
 
     encryptedPacket[0] = UdpConstants.PACKET_ENCRYPTION_TYPE_1.value; // -31 && 225
-    List.copyRange(encryptedPacket, 1, nonceData);
-    List.copyRange(encryptedPacket, nonceData.length, cypherUnit8List);
+
+    encryptedPacket.setRange(1, nonceData.length , ByteArray(nonceData).bytes);
+    encryptedPacket.setRange(nonceData.length +1, nonceData.length +1 +cypherUnit8List.length, cypherUnit8List);
+
+    // List.copyRange(encryptedPacket, 1, nonceData);
+
+    // List.copyRange(encryptedPacket, nonceData.length , cypherUnit8List);
 
     // log("encryptedPacket    ${encryptedPacket.toList()}");
 
-    socketConnectHelper.sendPacket(encryptedPacket);
+    socketConnectHelper.sendPacket(Int8List.fromList(encryptedPacket.toList()));
 
     encryptionNonce++;
   }
 
-  // Uint8List? _voice;
 
-  void _onBufferReceived2(eventData) {
-    //  log("Listener 2 received buffer of size ${eventData}!");
+  bool _stopListening() {
+    if (!isRecording) return false;
+    print("Stop Listening to the microphone");
+    listener.cancel();
+
+    setState(() {
+      isRecording = false;
+      currentSamples = null;
+      startTime = null;
+    });
+    return true;
   }
 
-  void _onErrorReceived(dynamic eventData) {
-    String errorMsg = eventData as String;
-    log("_onErrorReceived   $errorMsg");
+  // Platform messages are asynchronous, so we initialize in an async method.
+  Future<void> initPlatformState() async {
+    if (!mounted) return;
+    isActive = true;
+
+    Statistics(false);
+
+    controller = AnimationController(duration: Duration(seconds: 1), vsync: this)
+      ..addListener(() {
+        if (isRecording) setState(() {});
+      })
+      ..addStatusListener((status) {
+        if (status == AnimationStatus.completed)
+          controller.reverse();
+        else if (status == AnimationStatus.dismissed) controller.forward();
+      })
+      ..forward();
   }
 
-  Future<void> _stopProcessing() async {
+  Color _getBgColor() => (isRecording) ? Colors.red : Colors.cyan;
+
+  Icon _getIcon() => (isRecording) ? Icon(Icons.stop) : Icon(Icons.keyboard_voice);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      theme: ThemeData.dark(),
+      home: Scaffold(
+          appBar: AppBar(
+            title: const Text('Plugin: mic_stream :: Debug'),
+          ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: _controlMicStream,
+            child: _getIcon(),
+            foregroundColor: _iconColor,
+            backgroundColor: _getBgColor(),
+            tooltip: (isRecording) ? "Stop recording" : "Start recording",
+          ),
 
 
-    await _voiceProcessor?.stop();
-    _removeListener?.call();
-    _removeListener2?.call();
-    _errorListener?.call();
+          // bottomNavigationBar: BottomNavigationBar(
+          //   items: [
+          //     BottomNavigationBarItem(
+          //       icon: Icon(Icons.broken_image),
+          //       label: "Sound Wave",
+          //     ),
+          //     BottomNavigationBarItem(
+          //       icon: Icon(Icons.broken_image),
+          //       label: "Intensity Wave",
+          //     ),
+          //     BottomNavigationBarItem(
+          //       icon: Icon(Icons.view_list),
+          //       label: "Statistics",
+          //     )
+          //   ],
+          //   backgroundColor: Colors.black26,
+          //   elevation: 20,
+          //   currentIndex: page,
+          //   onTap: _controlPage,
+          // ),
+          // body: (page == 0 || page == 1)
+          //     ? CustomPaint(
+          //         painter: WavePainter(
+          //           samples: visibleSamples,
+          //           color: _getBgColor(),
+          //           localMax: localMax,
+          //           localMin: localMin,
+          //           context: context,
+          //         ),
+          //       )
+          //     : Statistics(
+          //         isRecording,
+          //         startTime: startTime,
+          //       ),
 
-  }
-
-  void _toggleProcessing() async {
-    log("toggleProcessing");
-    await _startProcessing();
-
-
-  }
-
-  Widget _startBuild() {
-    return ElevatedButton(
-      onPressed: _toggleProcessing,
-      child: const Text("Start", style: TextStyle(fontSize: 20)),
+      ),
     );
   }
 
-  Widget _stopBuild() {
-    return ElevatedButton(
-      onPressed: _stopProcessing,
-      child: const Text("Stop", style: TextStyle(fontSize: 20)),
-    );
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      isActive = true;
+      print("Resume app");
+
+      _controlMicStream(command: memRecordingState ? Command.start : Command.stop);
+    } else if (isActive) {
+      memRecordingState = isRecording;
+      _controlMicStream(command: Command.stop);
+
+      print("Pause app");
+      isActive = false;
+    }
+  }
+
+  @override
+  void dispose() {
+    listener.cancel();
+    controller.dispose();
+    WidgetsBinding.instance!.removeObserver(this);
+    super.dispose();
   }
 }
+
+class WavePainter extends CustomPainter {
+  int? localMax;
+  int? localMin;
+  List<int>? samples;
+  late List<Offset> points;
+  Color? color;
+  BuildContext? context;
+  Size? size;
+
+  // Set max val possible in stream, depending on the config
+  // int absMax = 255*4; //(AUDIO_FORMAT == AudioFormat.ENCODING_PCM_8BIT) ? 127 : 32767;
+  // int absMin; //(AUDIO_FORMAT == AudioFormat.ENCODING_PCM_8BIT) ? 127 : 32767;
+
+  WavePainter({this.samples, this.color, this.context, this.localMax, this.localMin});
+
+  @override
+  void paint(Canvas canvas, Size? size) {
+    this.size = context!.size;
+    size = this.size;
+
+    Paint paint = new Paint()
+      ..color = color!
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+
+    if (samples!.length == 0) return;
+
+    points = toPoints(samples);
+
+    Path path = new Path();
+    path.addPolygon(points, false);
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldPainting) => true;
+
+  // Maps a list of ints and their indices to a list of points on a cartesian grid
+  List<Offset> toPoints(List<int>? samples) {
+    List<Offset> points = [];
+    if (samples == null) samples = List<int>.filled(size!.width.toInt(), (0.5).toInt());
+    double pixelsPerSample = size!.width / samples.length;
+    for (int i = 0; i < samples.length; i++) {
+      var point = Offset(i * pixelsPerSample,
+          0.5 * size!.height * pow((samples[i] - localMin!) / (localMax! - localMin!), 5));
+      points.add(point);
+    }
+    return points;
+  }
+
+  double project(int val, int max, double height) {
+    double waveHeight = (max == 0) ? val.toDouble() : (val / max) * 0.5 * height;
+    return waveHeight + 0.5 * height;
+  }
+}
+
+class Statistics extends StatelessWidget {
+  final bool isRecording;
+  final DateTime? startTime;
+
+  final String url = "https://github.com/anarchuser/mic_stream";
+
+  Statistics(this.isRecording, {this.startTime});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(children: <Widget>[
+      ListTile(leading: Icon(Icons.title), title: Text("Microphone Streaming Example App")),
+      ListTile(
+        leading: Icon(Icons.keyboard_voice),
+        title: Text((isRecording ? "Recording" : "Not recording")),
+      ),
+      ListTile(
+          leading: Icon(Icons.access_time),
+          title: Text((isRecording ? DateTime.now().difference(startTime!).toString() : "Not recording"))),
+    ]);
+  }
+}
+
+Iterable<T> eachWithIndex<E, T>(Iterable<T> items, E Function(int index, T item) f) {
+  var index = 0;
+
+  for (final item in items) {
+    f(index, item);
+    index = index + 1;
+  }
+
+  return items;
+}
+///

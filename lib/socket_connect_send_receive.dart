@@ -42,7 +42,8 @@ class SocketConnectHelper {
   int requestedFlag = 0;
   int currentFlag = 0;
 
-  connect(ImgListener imgListener, AudioQueue audioQueue) async {
+  // connect(ImgListener imgListener, AudioQueue audioQueue) async {
+  connect() async {
     int lastSubscribe = 0;
 
     datagramSocket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
@@ -60,7 +61,7 @@ class SocketConnectHelper {
         Datagram? datagram = datagramSocket.receive();
         if (datagram != null) {
           /// Process Data HERE
-          _processPacket(datagram, imgListener, audioQueue);
+        //  _processPacket(datagram, imgListener, audioQueue);
         }
       } catch (e) {
         lastSubscribe = 0;
@@ -128,6 +129,7 @@ class SocketConnectHelper {
   }
 
   sendPacket(List<int> buffer) async {
+    print("final send $buffer");
     datagramSocket.send(buffer, InternetAddress(host), port);
   }
 
