@@ -22,13 +22,13 @@ class SodiumDecryptHelper {
     // print("cipherText ==>  $cipherText");
     // print("nonce ==>  $nonce");
     // print("key ==>  $key");
-    Uint8List decryptData = Sodium.cryptoAeadChacha20poly1305Decrypt(null, cipherText, null, nonce, key);
+    Uint8List decryptData = Sodium.cryptoAeadChacha20poly1305Decrypt(
+        null, cipherText, null, nonce, key);
     // print("decryptData ==>  $decryptData");
-    return decryptData ;
+    return decryptData;
   }
 
   // Uint8List encrypt(Int8List data , Int8List noce) {
   // }
-
 
 }

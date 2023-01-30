@@ -40,17 +40,17 @@ class SocketConnectHelper {
   int requestedFlag = 0;
   int currentFlag = 0;
 
-
-  connect(ImgListener imgListener , AudioQueue audioQueue) async {
+  connect(ImgListener imgListener, AudioQueue audioQueue) async {
     int lastSubscribe = 0;
 
     datagramSocket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
-    datagramPacket =
-        Datagram(Uint8List(16 * 1024), InternetAddress(host, type: InternetAddressType.any), 6999);
+    datagramPacket = Datagram(Uint8List(16 * 1024),
+        InternetAddress(host, type: InternetAddressType.any), 6999);
     //
     Timer.periodic(const Duration(microseconds: 5), (timer) async {
-      try{
-        if(lastSubscribe + (currentFlag == requestedFlag ? 15000 : 500)< DateTime.now().millisecondsSinceEpoch ){
+      try {
+        if (lastSubscribe + (currentFlag == requestedFlag ? 15000 : 500) <
+            DateTime.now().millisecondsSinceEpoch) {
           lastSubscribe = DateTime.now().millisecondsSinceEpoch;
           _sendSubscribe(true);
         }
@@ -58,16 +58,18 @@ class SocketConnectHelper {
         Datagram? datagram = datagramSocket.receive();
         if (datagram != null) {
           /// Process Data HERE
-          _processPacket(datagram , imgListener , audioQueue);
+          _processPacket(datagram, imgListener, audioQueue);
         }
-
-      }catch(e){
-        lastSubscribe =0;
-        try{
-          datagramSocket = datagramSocket.port >0 ? await RawDatagramSocket.bind(InternetAddress.anyIPv4, datagramSocket.port) : await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
-        }
-        catch(e){
-          datagramSocket=  await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
+      } catch (e) {
+        lastSubscribe = 0;
+        try {
+          datagramSocket = datagramSocket.port > 0
+              ? await RawDatagramSocket.bind(
+                  InternetAddress.anyIPv4, datagramSocket.port)
+              : await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
+        } catch (e) {
+          datagramSocket =
+              await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
         }
       }
     });
@@ -104,9 +106,6 @@ class SocketConnectHelper {
     //
     // }
 
-
-
-
     // Timer.periodic(
     //   const Duration(milliseconds: 500),
     //   (timer) {
@@ -125,6 +124,7 @@ class SocketConnectHelper {
   _sendPacket(List<int> buffer) async {
     datagramSocket.send(buffer, InternetAddress(host), port);
   }
+
   sendPacket(List<int> buffer) async {
     datagramSocket.send(buffer, InternetAddress(host), port);
   }
@@ -156,7 +156,8 @@ class SocketConnectHelper {
   }
 
   //
-  _processPacket(Datagram datagram , ImgListener imgListener , AudioQueue audioQueue ) {
+  _processPacket(
+      Datagram datagram, ImgListener imgListener, AudioQueue audioQueue) {
     ByteArray packetData = ByteArray(datagram.data);
 
     Byte type = packetData.array.first;
@@ -167,14 +168,16 @@ class SocketConnectHelper {
       // 225  &-OR-& -31
       // decrypt the data before handling them
       ByteArray nonce = ByteArray(packetData.bytes.sublist(1, 9));
-      ByteArray encryptedData = ByteArray(packetData.bytes.sublist(nonce.array.length + 1));
+      ByteArray encryptedData =
+          ByteArray(packetData.bytes.sublist(nonce.array.length + 1));
       ByteArray key = ByteArray(toUnit8List(keyEncepted.codeUnits));
 
       try {
-        SodiumDecryptHelper sodiumDecryptHelper =
-        SodiumDecryptHelper(cipherText: encryptedData.bytes, nonce: nonce.bytes, key: key.bytes);
+        SodiumDecryptHelper sodiumDecryptHelper = SodiumDecryptHelper(
+            cipherText: encryptedData.bytes,
+            nonce: nonce.bytes,
+            key: key.bytes);
         data = ByteArray(sodiumDecryptHelper.decrypt());
-
       } catch (e) {
         print("== Catch Error in Decrypt Data In Sodiom");
       }
@@ -184,9 +187,8 @@ class SocketConnectHelper {
         // log("DATA AFTER DECRYPT AS  bytes ===>>>    ${data.bytes}");
 
         int seq = ((data.array[1].value & 0xff) << 16) |
-        ((data.array[2].value & 0xff) << 8) |
-        ((data.array[3].value & 0xff));
-
+            ((data.array[2].value & 0xff) << 8) |
+            ((data.array[3].value & 0xff));
 
         int dataLength = data.bytes.length;
         var byteData = ByteData(dataLength);
@@ -201,11 +203,11 @@ class SocketConnectHelper {
           i++;
         });
 
-        if(data.array[0].value ==0x34){
+        if (data.array[0].value == 0x34) {
           jpegQueue.enqueue(seq, byteData, imgListener);
         }
 
-        if(data.array[0].value == 0x21){
+        if (data.array[0].value == 0x21) {
           // print("AudioREceived");
           // int length = 160;
           // for (int i = 0, r = 0; i < length; r++) {
@@ -220,7 +222,6 @@ class SocketConnectHelper {
           //   audioQueue.enqueue(seq, ulaw, r);
           // }
         }
-
       } else {
         print("DATA AFTER DECRYPT IS NULL");
       }

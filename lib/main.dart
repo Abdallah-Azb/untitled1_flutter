@@ -33,7 +33,8 @@ void main() {
 }
 
 //
-String token = "Bearer b8f3bc448f3b8487fba0cc83fcf758b894d343636e9af22a5ea69ea373e98cd1";
+// String token =
+//     "Bearer b8f3bc448f3b8487fba0cc83fcf758b894d343636e9af22a5ea69ea373e98cd1";
 
 //
 class MyApp extends StatelessWidget {
@@ -80,7 +81,8 @@ class _MyHomePageState extends State<MyHomePage>
   List<int> toBytes(List<int> bytes, int from, int amount) {
     return bytes.sublist(from, amount);
   }
-  late SocketConnectHelper socketConnectHelper ;
+
+  late SocketConnectHelper socketConnectHelper;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -96,12 +98,9 @@ class _MyHomePageState extends State<MyHomePage>
           FloatingActionButton(
             // onPressed: _incrementCounter,
             onPressed: () async {
-
-
-               NetworkHelper networkHelper = NetworkHelper();
+              NetworkHelper networkHelper = NetworkHelper();
               ResponseGetInfo? responseGetInfo = await networkHelper.getInfo();
               if (responseGetInfo != null) {
-
                 // _playerPCMI16
                 //     .initialize(
                 //   bufferSize: 724,
@@ -122,15 +121,11 @@ class _MyHomePageState extends State<MyHomePage>
                     sessionId: responseGetInfo.sessionId,
                     keyEncepted: responseGetInfo.key);
 
-               try{
-                 _toggleProcessing() ;
-               }catch(e){}
+                try {
+                //  _toggleProcessing();
+                } catch (e) {}
 
-                socketConnectHelper.connect(this , audioQueue);
-
-
-
-
+                socketConnectHelper.connect(this, audioQueue);
               }
             },
             tooltip: 'Increment',
@@ -149,7 +144,7 @@ class _MyHomePageState extends State<MyHomePage>
     // TODO: implement onImageReceived
   }
 
- /* playAudio() async {
+  /* playAudio() async {
     _playerPCMI16.initialize(
       // Buffer size of the underlying audio track (Android only)
       bufferSize: 4096 << 3,
@@ -523,7 +518,8 @@ class _MyHomePageState extends State<MyHomePage>
         // });
 
         // await _voiceProcessor.start();
-      } else {
+      }
+      else {
         log("Recording permission not granted");
       }
     } on PlatformException catch (ex) {
@@ -605,7 +601,7 @@ class _MyHomePageState extends State<MyHomePage>
     audioTransmitSequenceNumber++;
     log("== audioOutPacket ==   ${audioOutPacket.toList()}");
     try {
-    sendEncryptedPacket(audioOutPacket);
+      sendEncryptedPacket(audioOutPacket);
     } catch (e) {
       log("TRY CACH ERROE  $e");
     }
@@ -624,19 +620,21 @@ class _MyHomePageState extends State<MyHomePage>
 
     String keyEncrypt = socketConnectHelper.keyEncepted;
     Uint8List keyUin8List = Uint8List.fromList(keyEncrypt.codeUnits);
-    print("keyUin8List = ${keyUin8List.toList()}\n");
-    Uint8List cypherUnit8List =
-        Sodium.cryptoAeadChacha20poly1305Encrypt(data, null, null, nonceData, keyUin8List);
+    // print("keyUin8List = ${keyUin8List.toList()}\n");
+    Uint8List cypherUnit8List = Sodium.cryptoAeadChacha20poly1305Encrypt(
+        data, null, null, nonceData, keyUin8List);
 
-    log("cypherUnit8List    ${cypherUnit8List.toList()}");
+    // log("cypherUnit8List    ${cypherUnit8List.toList()}");
 
-    Uint8List encryptedPacket = Uint8List(cypherUnit8List.length + nonceData.length + 1); // 189
+    Uint8List encryptedPacket =
+        Uint8List(cypherUnit8List.length + nonceData.length + 1); // 189
 
-    encryptedPacket[0] = UdpConstants.PACKET_ENCRYPTION_TYPE_1.value; // -31 && 225
+    encryptedPacket[0] =
+        UdpConstants.PACKET_ENCRYPTION_TYPE_1.value; // -31 && 225
     List.copyRange(encryptedPacket, 1, nonceData);
     List.copyRange(encryptedPacket, nonceData.length, cypherUnit8List);
 
-    log("encryptedPacket    ${encryptedPacket.toList()}");
+    // log("encryptedPacket    ${encryptedPacket.toList()}");
 
     socketConnectHelper.sendPacket(encryptedPacket);
 
@@ -683,8 +681,9 @@ class _MyHomePageState extends State<MyHomePage>
 
   Widget _buildToggleProcessingButton() {
     return ElevatedButton(
-      onPressed: _isButtonDisabled ? null : _toggleProcessing,
-      child: Text(_isProcessing ? "Stop" : "Start", style: TextStyle(fontSize: 20)),
+      onPressed: _isButtonDisabled ? _stopProcessing : _toggleProcessing,
+      child: Text(_isProcessing ? "Stop" : "Start",
+          style: TextStyle(fontSize: 20)),
     );
   }
 }

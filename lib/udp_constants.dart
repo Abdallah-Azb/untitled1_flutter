@@ -19,7 +19,6 @@ class UdpConstants {
   static Byte STATE_AUDIO_SESSION_INVALID = Byte(6);
 }
 
-
 // void enqueue(int seq, ByteBuffer bb, ImgListener imgListener) {
 //   if (seq > vSeq) {
 //     imgListener.imgReceived(new Uint8List(0)); // marker for incomplete image (broken image)

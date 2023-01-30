@@ -17,15 +17,13 @@ class JpegQueue {
   }
 
   void enqueue(int seq, ByteData bb, ImgListener imgListener) {
-
-
     if (seq > vSeq) {
       vPresent.clearAll();
       vSeq = seq;
       vData = null;
     }
 
-    if (seq == vSeq ) {
+    if (seq == vSeq) {
       // print("bb is ${json.encode(bb.buffer.asUint8List())}");
       // print("bb is ${json.encode(bb.buffer.asUint8List())}");
 
@@ -38,10 +36,9 @@ class JpegQueue {
       // print("All  Data >>>>>>> ${bb.buffer.asInt8List()}");
       // print("All  Length >>>>>>> ${bb.buffer.asInt8List().length}");
 
-
       var index = 6;
       int imageLen = bb.getInt32(index);
-      index +=4;
+      index += 4;
       // int imageOffset = bb.sublist(10).buffer.asByteData().getUint32(0);
       // print("IMAGE Length >>>>>>> $imageLen");
       // print("Vdata Length >>>>>>> ${vData?.length}");
@@ -53,15 +50,15 @@ class JpegQueue {
       }
 
       int imageOffset = bb.getInt32(index);
-      index+=4;
+      index += 4;
 
       // print("IMAGE OFFSET >>>>>>> $imageOffset");
       // print("IMAGE Rmainig >>>>>>> ${bb.buffer.asUint8List().length -14}");
 
-      int remaining = bb.buffer.asUint8List().length -index;
+      int remaining = bb.buffer.asUint8List().length - index;
       // print("Initial Rmainig >>>>>>> ${remaining}");
 
-      while (remaining >0) {
+      while (remaining > 0) {
         // print("IMAGE Rmainig >>>>>>> ${bb.sublist(i).length}");
 
 //         int blockSize = Math.min(bb.remaining(), 256);
@@ -78,28 +75,25 @@ class JpegQueue {
 
 //
 
-        int blockSize =  min(remaining, 256);
+        int blockSize = min(remaining, 256);
 
         //
         // print("Block Size >>>>>>> $blockSize");
         // print("OFFSET >>>>>>> $imageOffset");
         // print("INDEX >>>>>>> $index");
 
-
-
-        Int8List viewedData = Int8List.sublistView(bb , index ,index+ blockSize);
+        Int8List viewedData =
+            Int8List.sublistView(bb, index, index + blockSize);
         // print("New RANGE is ${viewedData}");
 
-        vData!.setRange(imageOffset, imageOffset+ blockSize, viewedData);
+        vData!.setRange(imageOffset, imageOffset + blockSize, viewedData);
         // print("New VDdaata is ${vData}");
-
 
         // vData = vData?.sublist(imageOffset , blockSize);
         // vData = bb.buffer.asUint8List(imageOffset , blockSize);
-        index+=blockSize;
+        index += blockSize;
 
         // bb = ByteData.view(bb.buffer , imageOffset , blockSize);
-
 
         remaining = bb.buffer.asUint8List().length - index;
         vPresent.setBit((imageOffset ~/ 256));
@@ -124,10 +118,6 @@ class JpegQueue {
   }
 }
 
-
-
-abstract class ImgListener{
-
+abstract class ImgListener {
   void onImageReceived(Uint8List image);
-
 }

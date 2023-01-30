@@ -9,11 +9,16 @@ class NetworkHelper {
     dio.options = BaseOptions(
       validateStatus: (_) => true,
     );
-    dio.options.headers = {"accept": "application/json", "Authorization": token, "cloud-mjpg": "active"};
+    dio.options.headers = {
+      "accept": "application/json",
+      "Authorization": token,
+      "cloud-mjpg": "active"
+    };
   }
 
   // ACCESS TOKEN
-  final String token = "Bearer 3352e604903e47ce7c724f1a79f9dfc71f91ebfa3e1c3c3985823bb5893d47e4";
+  final String token =
+      "Bearer 41ba0982241827a3fcb9ba97b433792fcf72108d02ca609ca19466d9f7957580";
 
   // END POINT LIVE
   final String liveInfoApi = "https://api.doorbird.io/live/info";
@@ -33,7 +38,8 @@ class NetworkHelper {
       // SUCCESS API
       if (response.statusCode == 200) {
         Map<String, dynamic> jsonData = json.decode(response.toString());
-        Map<String, dynamic> mjpgInfo = jsonData["video"]["cloud"]["mjpg"]["default"];
+        Map<String, dynamic> mjpgInfo =
+            jsonData["video"]["cloud"]["mjpg"]["default"];
         host = mjpgInfo["host"];
         port = mjpgInfo["port"];
         sessionId = mjpgInfo["session"];
@@ -62,7 +68,7 @@ class NetworkHelper {
     } catch (exception) {
       //   log(exception.toString(), error: 'ERROR GET INFO API', name: 'EXCEPTION API');
     }
-    return responseGetInfo ;
+    return responseGetInfo;
   }
 }
 

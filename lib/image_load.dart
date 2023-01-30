@@ -34,7 +34,6 @@
 //   }
 // }
 
-
 import 'dart:typed_data';
 import 'package:bit_array/bit_array.dart';
 import 'dart:math' as Math;
@@ -46,46 +45,34 @@ import 'package:mqtt5_client/mqtt5_client.dart';
 // import 'package:bit_array/bit_array.dart';
 
 class JpegQueue {
-
-
   static int vSeq = 0;
-  static   Set<BitSet> vPresent = <BitSet>{};
-  static ByteArray ?  vData = ByteArray(Uint8List(64 * 1024)) ;
-  static enqueue (int seq ,ByteArray data,int length ){
-    ByteBuffer byteBuffer  ;
-    byteBuffer = data.bytes.buffer ;
-    MqttByteBuffer mqttByteBuffer =MqttByteBuffer.fromList(data.bytes);
+  static Set<BitSet> vPresent = <BitSet>{};
+  static ByteArray? vData = ByteArray(Uint8List(64 * 1024));
+  static enqueue(int seq, ByteArray data, int length) {
+    ByteBuffer byteBuffer;
+    byteBuffer = data.bytes.buffer;
+    MqttByteBuffer mqttByteBuffer = MqttByteBuffer.fromList(data.bytes);
     if (seq > vSeq) {
-
       print(" seq > vSeq ");
 
-       vPresent.clear();
+      vPresent.clear();
       vSeq = seq;
-      vData = null ;
+      vData = null;
     }
 
-    print("=== mqttByteBuffer.position 0000   ====     ${mqttByteBuffer.position}");
-    if(seq == vSeq){
+    print(
+        "=== mqttByteBuffer.position 0000   ====     ${mqttByteBuffer.position}");
+    if (seq == vSeq) {
       mqttByteBuffer.read(6);
       // data.array.
 
       // print("=== mqttByteBuffer.position 11111   ====     ${mqttByteBuffer.position}");
 
     }
-
-
-
   }
   // BitArray v = BitArray(1) ;
 
-
-
-
-
-
-
-
- // ByteBuffer vData = ByteBuffer(64 * 1024);
+  // ByteBuffer vData = ByteBuffer(64 * 1024);
 /*
   static Uint8List enqueue(int seq , Uint8List dataAfterDecrypt)   {
       int vSeq = 0;
@@ -133,9 +120,5 @@ class JpegQueue {
     return   vData ;
   }
 */
-
-
-
-
 
 }
