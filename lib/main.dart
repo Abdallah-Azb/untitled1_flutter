@@ -32,11 +32,6 @@ void main() {
   runApp(const MyApp());
 }
 
-//
-// String token =
-//     "Bearer b8f3bc448f3b8487fba0cc83fcf758b894d343636e9af22a5ea69ea373e98cd1";
-
-//
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
@@ -83,6 +78,7 @@ class _MyHomePageState extends State<MyHomePage>
   }
 
   late SocketConnectHelper socketConnectHelper;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -90,40 +86,28 @@ class _MyHomePageState extends State<MyHomePage>
         title: Text(widget.title),
       ),
       body: Center(
-        child: _buildToggleProcessingButton(),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _startBuild() ,
+            _stopBuild(),
+          ],
+        )
       ),
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           FloatingActionButton(
-            // onPressed: _incrementCounter,
             onPressed: () async {
               NetworkHelper networkHelper = NetworkHelper();
               ResponseGetInfo? responseGetInfo = await networkHelper.getInfo();
               if (responseGetInfo != null) {
-                // _playerPCMI16
-                //     .initialize(
-                //   bufferSize: 724,
-                //   nChannels: 1,
-                //   sampleRate: 8000,
-                //   pcmType: RawSoundPCMType.PCMI16,
-                // )
-                //     .then((value) {
-                //   setState(() {
-                //     // Trigger rebuild to update UI
-                //   });
-                // });
 
-                // audioQueue.startDecoding(this);
                 socketConnectHelper = SocketConnectHelper(
                     host: responseGetInfo.host,
                     port: int.parse(responseGetInfo.port.toString()),
                     sessionId: responseGetInfo.sessionId,
                     keyEncepted: responseGetInfo.key);
-
-                try {
-                //  _toggleProcessing();
-                } catch (e) {}
 
                 socketConnectHelper.connect(this, audioQueue);
               }
@@ -143,192 +127,6 @@ class _MyHomePageState extends State<MyHomePage>
 
     // TODO: implement onImageReceived
   }
-
-  /* playAudio() async {
-    _playerPCMI16.initialize(
-      // Buffer size of the underlying audio track (Android only)
-      bufferSize: 4096 << 3,
-      // Number of channels, either 1 or 2
-      nChannels: 1,
-      // Sample rate for playback in Hz
-      sampleRate: 16000,
-      // PCM format type, either PCMI16 (16-bit integer) or PCMF32 (32-bit float)
-      pcmType: RawSoundPCMType.PCMI16,
-    );
-
-    Timer.periodic(Duration(milliseconds: 500), (timer) async {
-      if (!_playerPCMI16.isPlaying) {
-        await _playerPCMI16.play();
-      }
-      // log("AudiLength${audio.length}");
-      if (_playerPCMI16.isPlaying) {
-        _playerPCMI16.feed(Uint8List.fromList([
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124,
-          -32124
-        ]));
-
-        _playerPCMI16.feed(_voice!);
-      }
-    });
-  }*/
 
   @override
   Future<void> onAudioReceived(List<int> audio) async {
@@ -508,24 +306,7 @@ class _MyHomePageState extends State<MyHomePage>
   int sampleRate = 16000;
   VoiceProcessor voiceProcessor = VoiceProcessor.getVoiceProcessor(512, 16000);
 
-  void transmitMic() async {
-    log("= transmitMic = ");
 
-    try {
-      if (await voiceProcessor.hasRecordAudioPermission() ?? false) {
-        // _voiceProcessor.addListener((buffer) {
-        //   log("Listener received buffer of size ${buffer}!");
-        // });
-
-        // await _voiceProcessor.start();
-      }
-      else {
-        log("Recording permission not granted");
-      }
-    } on PlatformException catch (ex) {
-      log("Failed to start recorder: $ex");
-    }
-  }
 
   bool _isButtonDisabled = false;
   bool _isProcessing = false;
@@ -545,28 +326,20 @@ class _MyHomePageState extends State<MyHomePage>
   }
 
   Future<void> _startProcessing() async {
-    setState(() {
-      _isButtonDisabled = true;
-    });
 
     _removeListener = _voiceProcessor?.addListener(_onBufferReceived);
-    // _removeListener2 = _voiceProcessor?.addListener(_onBufferReceived2);
     _errorListener = _voiceProcessor?.addErrorListener(_onErrorReceived);
     try {
       if (await _voiceProcessor?.hasRecordAudioPermission() ?? false) {
         await _voiceProcessor?.start();
-        setState(() {
-          _isProcessing = true;
-        });
+
       } else {
         log("Recording permission not granted");
       }
     } on PlatformException catch (ex) {
       log("Failed to start recorder: $ex");
     } finally {
-      setState(() {
-        _isButtonDisabled = false;
-      });
+
     }
   }
 
@@ -584,13 +357,13 @@ class _MyHomePageState extends State<MyHomePage>
       log("Transmit must be of size 160");
       return;
     }
-    Uint8List ulaw = Uint8List(160);
+    Int8List ulaw = Int8List(160);
     for (int i = 0; i < audioData.length; i++) {
       // conversion via mapping table from pcm to u-law 8kHz
       ulaw[i] = AudioQueue.l2u[audioData[i] & 0xffff];
     }
     log("== ulaw ==   ${ulaw.toList()}");
-    Uint8List audioOutPacket = Uint8List(164);
+    Int8List audioOutPacket = Int8List(164);
     int i = 0;
     audioOutPacket[i++] = UdpConstants.PACKET_ULAW.value; // 33
     audioOutPacket[i++] = (audioTransmitSequenceNumber >> 16); // 0
@@ -601,7 +374,7 @@ class _MyHomePageState extends State<MyHomePage>
     audioTransmitSequenceNumber++;
     log("== audioOutPacket ==   ${audioOutPacket.toList()}");
     try {
-      sendEncryptedPacket(audioOutPacket);
+      sendEncryptedPacket(Uint8List.fromList(audioOutPacket));
     } catch (e) {
       log("TRY CACH ERROE  $e");
     }
@@ -621,16 +394,14 @@ class _MyHomePageState extends State<MyHomePage>
     String keyEncrypt = socketConnectHelper.keyEncepted;
     Uint8List keyUin8List = Uint8List.fromList(keyEncrypt.codeUnits);
     // print("keyUin8List = ${keyUin8List.toList()}\n");
-    Uint8List cypherUnit8List = Sodium.cryptoAeadChacha20poly1305Encrypt(
-        data, null, null, nonceData, keyUin8List);
+    Uint8List cypherUnit8List =
+        Sodium.cryptoAeadChacha20poly1305Encrypt(data, null, null, nonceData, keyUin8List);
 
     // log("cypherUnit8List    ${cypherUnit8List.toList()}");
 
-    Uint8List encryptedPacket =
-        Uint8List(cypherUnit8List.length + nonceData.length + 1); // 189
+    Uint8List encryptedPacket = Uint8List(cypherUnit8List.length + nonceData.length + 1); // 189
 
-    encryptedPacket[0] =
-        UdpConstants.PACKET_ENCRYPTION_TYPE_1.value; // -31 && 225
+    encryptedPacket[0] = UdpConstants.PACKET_ENCRYPTION_TYPE_1.value; // -31 && 225
     List.copyRange(encryptedPacket, 1, nonceData);
     List.copyRange(encryptedPacket, nonceData.length, cypherUnit8List);
 
@@ -653,37 +424,33 @@ class _MyHomePageState extends State<MyHomePage>
   }
 
   Future<void> _stopProcessing() async {
-    setState(() {
-      _isButtonDisabled = true;
-    });
+
 
     await _voiceProcessor?.stop();
     _removeListener?.call();
     _removeListener2?.call();
     _errorListener?.call();
 
-    setState(() {
-      _isButtonDisabled = false;
-      _isProcessing = false;
-    });
   }
 
   void _toggleProcessing() async {
     log("toggleProcessing");
     await _startProcessing();
 
-    // if (_isProcessing) {
-    //   await _stopProcessing();
-    // } else {
-    //   await _startProcessing();
-    // }
+
   }
 
-  Widget _buildToggleProcessingButton() {
+  Widget _startBuild() {
     return ElevatedButton(
-      onPressed: _isButtonDisabled ? _stopProcessing : _toggleProcessing,
-      child: Text(_isProcessing ? "Stop" : "Start",
-          style: TextStyle(fontSize: 20)),
+      onPressed: _toggleProcessing,
+      child: const Text("Start", style: TextStyle(fontSize: 20)),
+    );
+  }
+
+  Widget _stopBuild() {
+    return ElevatedButton(
+      onPressed: _stopProcessing,
+      child: const Text("Stop", style: TextStyle(fontSize: 20)),
     );
   }
 }

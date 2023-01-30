@@ -27,6 +27,8 @@ class SocketConnectHelper {
   }) {
     if (host == "apiorun.doorbird.net") {
       host = "142.132.214.220";
+    }else if (host == "apiulaw.doorbird.net"){
+      host = "94.130.65.54" ;
     }
   }
 
