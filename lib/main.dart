@@ -95,10 +95,10 @@ class _MyHomePageState extends State<MyHomePage>
     await session.configure(const AudioSessionConfiguration.music());
     await session.setActive(true);
     // player.startPlayerFromStream(codec: Codec)
-    await player.openPlayer(enableVoiceProcessing: true);
-    await player.startPlayerFromStream(
-        codec: Codec.pcm16, numChannels: 1, sampleRate: 4000);
-    await player.setVolume(.9);
+    // await player.openPlayer(enableVoiceProcessing: true);
+    // await player.startPlayerFromStream(
+    //     codec: Codec.pcm16, numChannels: 1, sampleRate: 4000);
+    // await player.setVolume(.9);
 
     // await player.openPlayer(enableVoiceProcessing: true);
     // await player.startPlayerFromStream(
@@ -106,13 +106,13 @@ class _MyHomePageState extends State<MyHomePage>
 
     // int intSize = await FlutterSound;
     // print("Buffer size: $intSize");4
-    // await _playerPCMI16.initialize(
-    //   nChannels: 1,
-    //   bufferSize: 8,
-    //   pcmType: RawSoundPCMType.PCMI16,
-    //   sampleRate: 4000
-    // );
-    // await _playerPCMI16.setVolume(1.0);
+    await _playerPCMI16.initialize(
+      nChannels: 1,
+      bufferSize: 8,
+      pcmType: RawSoundPCMType.PCMI16,
+      sampleRate: 8000
+    );
+    await _playerPCMI16.setVolume(1.0);
     //  await flutterSound.openPlayer(enableVoiceProcessing: false);
     //  await flutterSound.setVolume(1.0);
     //  await flutterSound.startPlayerFromStream( codec: Codec.pcm16, sampleRate: 4000, numChannels: 1 );
@@ -159,19 +159,21 @@ class _MyHomePageState extends State<MyHomePage>
           FloatingActionButton(
             // onPressed: _incrementCounter,
             onPressed: () async {
-              NetworkHelper networkHelper = NetworkHelper();
-              ResponseGetInfo? responseGetInfo = await networkHelper.getInfo();
-              if (responseGetInfo != null) {
-                 socketConnectHelper = SocketConnectHelper(
-                    host: responseGetInfo.host,
-                    port: int.parse(responseGetInfo.port.toString()),
-                    sessionId: responseGetInfo.sessionId,
-                    keyEncepted: responseGetInfo.key);
-                socketConnectHelper.connect(this, audioQueue);
-               await audioQueue.reset();
-                await audioQueue.startDecoding(this);
-               await runMic();
-              }
+
+              await runMic();
+
+              // NetworkHelper networkHelper = NetworkHelper();
+              // ResponseGetInfo? responseGetInfo = await networkHelper.getInfo();
+              // if (responseGetInfo != null) {
+              //    socketConnectHelper = SocketConnectHelper(
+              //       host: responseGetInfo.host,
+              //       port: int.parse(responseGetInfo.port.toString()),
+              //       sessionId: responseGetInfo.sessionId,
+              //       keyEncepted: responseGetInfo.key);
+              //   socketConnectHelper.connect(this, audioQueue);
+              //  await audioQueue.reset();
+              //   await audioQueue.startDecoding(this);
+              // }
             },
             tooltip: 'Increment',
             child: const Icon(Icons.add),
@@ -217,16 +219,15 @@ class _MyHomePageState extends State<MyHomePage>
     //
     // });
     // Future.microtask(() async {
-    //   // if (!_playerPCMI16.isPlaying) {
-    //   //   await _playerPCMI16.play();
-    //   // }
-    //   //
-    //   // print("AudiLength${audioPart.length}");
-    //   // if (_playerPCMI16.isPlaying) {
-    //   //   _playerPCMI16.feed(Uint8List.fromList(audio));
-    //   //   await Future.delayed(const Duration(milliseconds: 100));
-    //   //   audioPart.clear();
-    //   // }
+      if (!_playerPCMI16.isPlaying) {
+        await _playerPCMI16.play();
+      }
+      if (_playerPCMI16.isPlaying) {
+        Int16List int16list  = Int16List.fromList(audio);
+        _playerPCMI16.feed(Uint8List.view(int16list.buffer));
+        // await Future.delayed(const Duration(milliseconds: 100));
+        // audioPart.clear();
+      }
     //   //
     //
     //
@@ -252,12 +253,12 @@ class _MyHomePageState extends State<MyHomePage>
 
     // player.foodSink!.add(FoodData(Uint8List.fromList(audio)));
 
-    methodChannel
-        .invokeMethod(
-        "playAudio",
-        {
-          "audioBuffer":audio,
-        });
+    // methodChannel
+    //     .invokeMethod(
+    //     "playAudio",
+    //     {
+    //       "audioBuffer":audio,
+    //     });
     // TODO: implement onAudioReceived
   }
 
@@ -265,21 +266,105 @@ class _MyHomePageState extends State<MyHomePage>
 
   runMic() async {
 
-    Timer.periodic(const Duration(milliseconds: 100), (timer) async {
-      MicStream.shouldRequestPermission(true);
-      stream = await MicStream.microphone(
-        audioSource: AudioSource.MIC,
-        sampleRate: 8000, //1000 * (rng.nextInt(50) + 30),
-        channelConfig: ChannelConfig.CHANNEL_IN_MONO,
-        audioFormat: AudioFormat.ENCODING_PCM_16BIT,
-      );
 
-      // after invoking the method for the first time, though, these will be available;
-      // It is not necessary to setup a listener first, the stream only needs to be returned first
-      listener = stream!.listen(( sample){
-        transmitAudioData(sample.getRange(0, 160).toList());
-      });
-    });
+    final session = await AudioSession.instance;
+    await session.configure(AudioSessionConfiguration(
+      avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
+      avAudioSessionCategoryOptions:
+      AVAudioSessionCategoryOptions.allowBluetooth |
+      AVAudioSessionCategoryOptions.defaultToSpeaker,
+      avAudioSessionMode: AVAudioSessionMode.spokenAudio,
+      avAudioSessionRouteSharingPolicy:
+      AVAudioSessionRouteSharingPolicy.defaultPolicy,
+      avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
+      androidAudioAttributes: const AndroidAudioAttributes(
+        contentType: AndroidAudioContentType.speech,
+        flags: AndroidAudioFlags.none,
+        usage: AndroidAudioUsage.voiceCommunication,
+      ),
+      androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
+      androidWillPauseWhenDucked: true,
+    ));
+
+
+    FlutterSoundPlayer player = FlutterSoundPlayer();
+
+    player.openPlayer();
+    player.startPlayerFromStream(codec: Codec.pcm16 , sampleRate: 8000 , numChannels: 1);
+
+    FlutterSoundRecorder sound = FlutterSoundRecorder();
+    await sound.openRecorder();
+    var recordingDataController = StreamController<Food>();
+
+        recordingDataController.stream.listen((buffer) {
+          if (buffer is FoodData) {
+            // player.feedFromStream(buffer.data!);
+
+
+            // List<int> intList = List<int>.filled(160, 0);
+            // for (int i = 0; i < 160; i++) {
+            //   intList[i] = buffer!.data![i] - 256;
+            // }
+            //
+
+            print("All length${buffer.data?.length}");
+
+            Uint8List list = Uint8List.sublistView(buffer.data!  ,0 , 640 );
+
+            Int16List int16List = Int16List.view(list.buffer);
+
+            print("INT16List${int16List}");
+
+            if(int16List.length >160){
+              methodChannel
+                  .invokeMethod(
+                  "playAudio",
+                  {
+                    "audioBuffer":int16List.getRange(0, 160).toList()
+                  });
+            }
+            else {
+              methodChannel
+                  .invokeMethod(
+                  "playAudio",
+                  {
+                    "audioBuffer":int16List.toList()
+                  });
+            }
+
+
+
+          }
+        });
+
+    await sound!.startRecorder(
+      toStream: recordingDataController.sink,
+      codec: Codec.pcm16,
+      numChannels: 1,
+      sampleRate: 8000,
+      bitRate: 16000
+    );
+      // MicStream.shouldRequestPermission(true);
+      // stream = await MicStream.microphone(
+      //   audioSource: AudioSource.DEFAULT,
+      //   sampleRate: 8000, //1000 * (rng.nextInt(50) + 30),
+      //   channelConfig: ChannelConfig.CHANNEL_IN_MONO,
+      //   audioFormat: AudioFormat.ENCODING_PCM_16BIT,
+      // );
+      //
+      // // after invoking the method for the first time, though, these will be available;
+      // // It is not necessary to setup a listener first, the stream only needs to be returned first
+      // stream!.listen(( sample){
+      //
+      //   Future.microtask(() {
+      //
+      //
+      //   });
+      //
+      //
+      //   // transmitAudioData(sample.getRange(0, 160).toList());
+      // });
+
 
   }
 
@@ -353,9 +438,15 @@ class _MyHomePageState extends State<MyHomePage>
     // log("encryptedPacket    ${encryptedPacket.toList()}");
     print("LEbght${Int8List.fromList(encryptedPacket.toList())}");
 
+
+
     socketConnectHelper.sendPacket(Int8List.fromList(encryptedPacket.toList()));
     // socketConnectHelper.processPacket(Datagram(encryptedPacket, InternetAddress("94.130.65.54", type: InternetAddressType.any), 6999) , this , audioQueue );
 
     encryptionNonce++;
   }
+
+
+  
+
 }
