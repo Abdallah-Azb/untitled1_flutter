@@ -128,6 +128,7 @@ class SocketConnectHelper {
   }
 
   sendPacket(List<int> buffer) async {
+    print("Length${buffer.length}");
     datagramSocket.send(buffer, InternetAddress(host), port);
   }
 
@@ -210,7 +211,6 @@ class SocketConnectHelper {
         }
         
         if(data.array[0].value == 0x21){
-
 
           int length = 160;
           for (int i = 0, r = 0; i < length; r++) {
