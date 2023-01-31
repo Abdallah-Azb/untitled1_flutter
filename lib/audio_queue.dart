@@ -526,7 +526,7 @@ class AudioQueue {
     7
   ];
 
-  static final Uint8List l2u = generateL2u();
+  static final Int16List l2u = generateL2u();
 
   PriorityQueue<Frame> buffer = PriorityQueue<Frame>();
   Queue<Frame> decodeQueue = ListQueue<Frame>();
@@ -759,7 +759,7 @@ class AudioQueue {
     //
     //     int ulawLength = ulawFrame!.ulaw.length;
     //     int downsampling = 1;
-    //     List<int> pcm = [];
+    //     List<int > pcm = [];
     //
     //     int gainFactor = 1;
     //     for (int p = 0, u = 0; p < pcm.length; p++, u += downsampling) {
@@ -781,11 +781,12 @@ class AudioQueue {
     // }
   }
 
-  static Uint8List generateL2u() {
-    Uint8List result = Uint8List(64 * 1024);
+  static Int16List generateL2u() {
+    Int16List result = Int16List(64 * 1024);
     for (int i = 0; i < result.length; i++) {
       result[i] = l2uByte(i).value;
     }
+    print("result - result - result    $result");
     return result;
   }
 
