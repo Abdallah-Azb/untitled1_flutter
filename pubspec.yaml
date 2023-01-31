@@ -50,12 +50,16 @@ dependencies:
   raw_sound: ^0.3.0+1
   async_locks: ^3.1.0
   flutter_sound: ^9.2.13
+  audio_session: ^0.1.13
+  mic_stream: ^0.6.4
+  flutter_isolate: ^2.0.4
 
-
-  sound_stream:
-    git:
-      url: https://github.com/AlexanderHorielko/flutter-sound-stream.git
-      ref: android-fix
+#
+#
+#  sound_stream:
+#    git:
+#      url: https://github.com/AlexanderHorielko/flutter-sound-stream.git
+#      ref: android-fix
 
 dev_dependencies:
   flutter_test:

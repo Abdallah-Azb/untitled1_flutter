@@ -61,7 +61,7 @@ class SocketConnectHelper {
        Datagram? datagram = datagramSocket.receive();
        if (datagram != null) {
          /// Process Data HERE
-         _processPacket(datagram , imgListener , audioQueue);
+         processPacket(datagram , imgListener , audioQueue);
        }
 
      }catch(e){
@@ -127,9 +127,11 @@ class SocketConnectHelper {
     // );
   }
 
-  _sendPacket(List<int> buffer) async {
+  sendPacket(List<int> buffer) async {
     datagramSocket.send(buffer, InternetAddress(host), port);
   }
+
+
 
   //
   void _sendSubscribe(bool subscribe) {
@@ -152,13 +154,13 @@ class SocketConnectHelper {
     bb.addByte(52); // videoType
     bb.addByte(33); // audioType enabled
     subscribeSeq++;
-    _sendPacket(bb.getData());
+    sendPacket(bb.getData());
     requestedFlag = 5;
     // print("sendSubscribe   ${bb.getData()}");
   }
 
   //
-  _processPacket(Datagram datagram , ImgListener imgListener , AudioQueue audioQueue ) {
+  processPacket(Datagram datagram , ImgListener imgListener , AudioQueue audioQueue ) {
     ByteArray packetData = ByteArray(datagram.data);
 
     Byte type = packetData.array.first;
@@ -208,7 +210,8 @@ class SocketConnectHelper {
         }
         
         if(data.array[0].value == 0x21){
-          print("AudioREceived");
+
+
           int length = 160;
           for (int i = 0, r = 0; i < length; r++) {
             type = data.array[i++];

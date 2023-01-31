@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:async_locks/async_locks.dart';
+import 'package:byte_util/byte.dart';
 import 'package:collection/collection.dart';
 
 class AudioQueue {
@@ -28,7 +29,7 @@ class AudioQueue {
   ];
 
 
-  static final Int8List l2u = generateL2u();
+  static final Uint8List l2u = generateL2u();
 
   final _semaphore =Semaphore(1);
   PriorityQueue<Frame> buffer = PriorityQueue<Frame>();
@@ -91,7 +92,7 @@ class AudioQueue {
           if (decodeQueue.isEmpty) {
             _semaphore.release();
             // continue;
-              await Future.delayed(const Duration(microseconds: 5));
+              await Future.delayed(const Duration(seconds: 2));
           }
           else {
             ulawFrame = decodeQueue.removeFirst();
@@ -175,16 +176,15 @@ class AudioQueue {
   // }
 
 
-
-  static Int8List generateL2u() {
-    Int8List result = Int8List(64 * 1024);
+  static Uint8List generateL2u() {
+    Uint8List result = Uint8List(64 * 1024);
     for (int i = 0; i < result.length; i++) {
-      result[i] = l2uByte(i);
+      result[i] = l2uByte(i).value;
     }
     return result;
   }
 
-  static int l2uByte(int sample) {
+  static Byte l2uByte(int sample) {
     const int cBias = 0x84;
     const int cClip = 32635;
     int sign = ((~sample) >> 8) & 0x80;
@@ -198,8 +198,10 @@ class AudioQueue {
     int exponent = l2uexp[(sample >> 7) & 0xff];
     int mantissa = (sample >> (exponent + 3)) & 0x0f;
     int compressedByte = ~(sign | (exponent << 4) | mantissa);
-    return compressedByte;
+    return Byte(compressedByte);
   }
+
+
 }
 
 abstract class AudioListener {
