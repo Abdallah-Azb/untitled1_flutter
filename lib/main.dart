@@ -171,7 +171,7 @@ class _MyHomePageState extends State<MyHomePage>
                 int16List.getRange(i, i + 160).toList());
             print("SubList is ${subList.length}");
             // await _semaphore.acquire();
-            transmitAudioData(int16List.toList());
+            transmitAudioData(subList.toList());
             // player.foodSink!.add(FoodData(Uint8List.view(subList.buffer)));
             // _semaphore.release();
 

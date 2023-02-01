@@ -224,7 +224,7 @@ class SocketConnectHelper {
             i += length;
             // print("AudioBefore${ulaw}");
 
-            // audioQueue.enqueue(seq, ulaw, r);
+            audioQueue.enqueue(seq, ulaw, r);
           }
         }
 
