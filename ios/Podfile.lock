@@ -11,7 +11,9 @@ PODS:
   - path_provider_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
-  - raw_sound (0.0.1):
+  - permission_handler_apple (9.0.4):
+    - Flutter
+  - sound_stream (0.0.1):
     - Flutter
 
 DEPENDENCIES:
@@ -20,7 +22,8 @@ DEPENDENCIES:
   - flutter_sodium (from `.symlinks/plugins/flutter_sodium/ios`)
   - flutter_sound (from `.symlinks/plugins/flutter_sound/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/ios`)
-  - raw_sound (from `.symlinks/plugins/raw_sound/ios`)
+  - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
+  - sound_stream (from `.symlinks/plugins/sound_stream/ios`)
 
 SPEC REPOS:
   trunk:
@@ -37,8 +40,10 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_sound/ios"
   path_provider_foundation:
     :path: ".symlinks/plugins/path_provider_foundation/ios"
-  raw_sound:
-    :path: ".symlinks/plugins/raw_sound/ios"
+  permission_handler_apple:
+    :path: ".symlinks/plugins/permission_handler_apple/ios"
+  sound_stream:
+    :path: ".symlinks/plugins/sound_stream/ios"
 
 SPEC CHECKSUMS:
   audio_session: 4f3e461722055d21515cf3261b64c973c062f345
@@ -47,7 +52,8 @@ SPEC CHECKSUMS:
   flutter_sound: c60effa2a350fb977885f0db2fbc4c1ad5160900
   flutter_sound_core: 26c10e5832e76aaacfae252d8925232281c486ae
   path_provider_foundation: 37748e03f12783f9de2cb2c4eadfaa25fe6d4852
-  raw_sound: e872bdad411c0e7f674524cbc63ffd3f0ba01e97
+  permission_handler_apple: 44366e37eaf29454a1e7b1b7d736c2cceaeb17ce
+  sound_stream: eba0f2a5994b91d9e5009a739df6e98515a7b44f
 
 PODFILE CHECKSUM: 775997f741c536251164e3eacf6e34abf2eb7a17
 

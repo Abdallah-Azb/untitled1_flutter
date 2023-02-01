@@ -128,7 +128,7 @@ class SocketConnectHelper {
   }
 
   sendPacket(List<int> buffer) async {
-    print("Length${buffer.length}");
+    // print("Length${buffer.length}");
     datagramSocket.send(buffer, InternetAddress(host), port);
   }
 
@@ -224,7 +224,7 @@ class SocketConnectHelper {
             i += length;
             // print("AudioBefore${ulaw}");
 
-            audioQueue.enqueue(seq, ulaw, r);
+            // audioQueue.enqueue(seq, ulaw, r);
           }
         }
 

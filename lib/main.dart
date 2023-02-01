@@ -2,6 +2,8 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:async_locks/async_locks.dart';
+import 'package:logger/logger.dart' show Level, Logger;
 
 // import 'dart:typed_data';
 import 'package:audio_session/audio_session.dart';
@@ -11,11 +13,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_sodium/flutter_sodium.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:flutter_sound_platform_interface/flutter_sound_recorder_platform_interface.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 // import 'package:flutter_sound/flutter_sound.dart';
 import 'package:get/get.dart';
-import 'package:raw_sound/raw_sound_player.dart';
-
+import 'package:sound_stream/sound_stream.dart';
 // import 'package:sound_stream/sound_stream.dart';
 import 'package:untitled1_flutter/audio_queue.dart';
 import 'package:untitled1_flutter/jpeg_queue.dart';
@@ -65,71 +67,151 @@ class _MyHomePageState extends State<MyHomePage>
 
   var encryptionNonce = 1;
   int audioTransmitSequenceNumber = 0;
+  final RecorderStream _recorder = RecorderStream();
 
-  Stream? stream;
-  late StreamSubscription listener;
+  late StreamSubscription _audioStream;
+
 
   List<int> audioPart = [];
 
   AudioQueue audioQueue = AudioQueue();
-  final _playerPCMI16 = RawSoundPlayer();
+  // final _playerPCMI16 = RawSoundPlayer();
 
   Rx<Uint8List> image = Uint8List(0).obs;
 
-  FlutterSoundPlayer player = FlutterSoundPlayer();
+  FlutterSoundPlayer player = FlutterSoundPlayer(logLevel: Level.nothing);
 
   // final FlutterSoundPlayer flutterSound =  FlutterSoundPlayer(voiceProcessing:false);
+  final _semaphore =Semaphore(1);
+
+
+
 
   @override
-  void initState() {
+  void initState()  {
     super.initState();
     initPlugin();
   }
 
   Future<void> initPlugin() async {
-    //
+
+
+    await Permission.microphone.request();
     final session = await AudioSession.instance;
-    await session.configure(const AudioSessionConfiguration.music());
+    await session.configure( AudioSessionConfiguration(
+      avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
+      avAudioSessionCategoryOptions:
+      AVAudioSessionCategoryOptions.allowBluetooth|AVAudioSessionCategoryOptions.defaultToSpeaker,
+      avAudioSessionMode: AVAudioSessionMode.voiceChat,
+
+      avAudioSessionRouteSharingPolicy:
+      AVAudioSessionRouteSharingPolicy.defaultPolicy,
+      avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
+      androidAudioAttributes: const AndroidAudioAttributes(
+        contentType: AndroidAudioContentType.speech,
+        flags: AndroidAudioFlags.none,
+        usage: AndroidAudioUsage.voiceCommunication,
+      ),
+      androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
+      androidWillPauseWhenDucked: true,
+    ));
     await session.setActive(true);
-    // player.startPlayerFromStream(codec: Codec)
-    // await player.openPlayer(enableVoiceProcessing: true);
-    // await player.startPlayerFromStream(
-    //     codec: Codec.pcm16, numChannels: 1, sampleRate: 4000);
-    // await player.setVolume(.9);
+    await player.openPlayer(enableVoiceProcessing: true);
+    await player.startPlayerFromStream(
+        codec: Codec.pcm16, numChannels: 1, sampleRate: 8000 );
+    await player.setVolume(1);
 
-    // await player.openPlayer(enableVoiceProcessing: true);
-    // await player.startPlayerFromStream(
-    //     codec: Codec.pcm8, numChannels: 1, sampleRate: 4000);
-
-    // int intSize = await FlutterSound;
-    // print("Buffer size: $intSize");4
-    await _playerPCMI16.initialize(
-        nChannels: 1,
-        bufferSize: 8,
-        pcmType: RawSoundPCMType.PCMI16,
-        sampleRate: 8000);
-    await _playerPCMI16.setVolume(1.0);
-    //  await flutterSound.openPlayer(enableVoiceProcessing: false);
-    //  await flutterSound.setVolume(1.0);
-    //  await flutterSound.startPlayerFromStream( codec: Codec.pcm16, sampleRate: 4000, numChannels: 1 );
-
-    // _playerStatus = _player.status.listen((status) {
-    // });
-    //
-    // await Future.wait([
-    //   _player.initialize(sampleRate: 8000),
-    // ]);
-
-    // await _player.start();
   }
 
-  Uint8List toUnit8List(List<int> data) {
-    return Uint8List.fromList(data);
+
+  runMic() async {
+
+   //  await _recorder.initialize(sampleRate: 8000);
+   //  _audioStream = _recorder.audioStream.listen((data) {
+   //    Uint8List list = Uint8List.fromList(data);
+   //    print("Returnede Length is ${list.length}");
+   //
+   //
+   //    // if (_isPlaying) {
+   //    //   _player.writeChunk(data);
+   //    // } else {
+   //    //   _micChunks.add(data);
+   //    // }
+   //  });
+   // await _recorder.start();
+    FlutterSoundRecorder sound = FlutterSoundRecorder( logLevel: Level.nothing);
+    await sound.openRecorder();
+    var recordingDataController = StreamController<Food>();
+
+    await sound.startRecorder(
+        toStream: recordingDataController.sink,
+        codec: Codec.pcm16,
+        numChannels: 1,
+        sampleRate: 8000,
+        bitRate: 512,
+        audioSource: AudioSource.voice_communication);
+
+
+    recordingDataController.stream.listen((buffer) async {
+      if (buffer is FoodData) {
+
+
+        Uint8List u8list = Uint8List.fromList(buffer.data!);
+
+        // print("All length${buffer.data?.length}");
+
+        Int16List int16List = Int16List.view(u8list.buffer);
+
+        // print("INT16List${int16List.length}");
+
+        try {
+          await _semaphore.acquire();
+          for (int i = 0; i <= int16List.length - 160; i += 160) {
+            Int16List subList = Int16List.fromList(
+                int16List.getRange(i, i + 160).toList());
+            print("SubList is ${subList.length}");
+            // await _semaphore.acquire();
+            transmitAudioData(int16List.toList());
+            // player.foodSink!.add(FoodData(Uint8List.view(subList.buffer)));
+            // _semaphore.release();
+
+          }
+          _semaphore.release();
+        } on Exception catch (e) {
+          print("Data is ${e}");
+        }
+
+        // if(Platform.isIOS) {
+        //   print("length is ${int16List.length}");
+        //   try {
+        //     for (int i = 0; i <= int16List.length - 160; i += 160) {
+        //       Int16List subList = Int16List.fromList(
+        //           int16List.getRange(i, i + 160).toList());
+        //       print("SubList is ${subList.length}");
+        //       // await _semaphore.acquire();
+        //       player.foodSink!.add(FoodData(Uint8List.view(subList.buffer)));
+        //       // _semaphore.release();
+        //
+        //     }
+        //   } on Exception catch (e) {
+        //     print("Data is ${e}");
+        //   }
+        // }
+        // else if(Platform.isAndroid){
+        //
+        //   print("length is ${int16List.length}");
+        //   player.foodSink!.add(FoodData(Uint8List.view(int16List.buffer)));
+        //
+        // }
+
+
+
+      }
+    });
+
   }
 
-  List<int> toBytes(List<int> bytes, int from, int amount) {
-    return bytes.sublist(from, amount);
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -155,6 +237,7 @@ class _MyHomePageState extends State<MyHomePage>
           FloatingActionButton(
             // onPressed: _incrementCounter,
             onPressed: () async {
+
               NetworkHelper networkHelper = NetworkHelper();
               ResponseGetInfo? responseGetInfo = await networkHelper.getInfo();
               if (responseGetInfo != null) {
@@ -167,6 +250,7 @@ class _MyHomePageState extends State<MyHomePage>
                 await audioQueue.reset();
                 await audioQueue.startDecoding(this);
                 await runMic();
+
               }
             },
             tooltip: 'Increment',
@@ -180,173 +264,16 @@ class _MyHomePageState extends State<MyHomePage>
 
   @override
   void onImageReceived(Uint8List image) {
-    // print("returned Image is${Int8List.fromList(image)}");
-    // print("returned Image is${image}");
-
-    //
-    // Flutter.app.post(() {
-    //   // This callback will be run in the UI thread
-    //   print("Running in the UI thread");
-    // });
-    // Future.wait((){});
-    print("ImageReieved");
     this.image.value = image;
   }
 
   @override
   Future<void> onAudioReceived(List<int> audio) async {
-    // flutterSound.feedFromStream(Uint8List.fromList(audio));
-    // _player.writeChunk(Uint8List.fromList(audio));
-
-    // print("LEngth${audio.length}");
-    //
-    // audioPart.addAll(audio);
-    // if(audioPart.length == 320){
-    //
-    //
-    // }
-
-    // Future.delayed(const Duration(microseconds: 10) , (){
-    //   player.foodSink!.add(FoodData(Uint8List.fromList(audio)));
-    //
-    // });
-    // Future.microtask(() async {
-    if (!_playerPCMI16.isPlaying) {
-      await _playerPCMI16.play();
-    }
-    if (_playerPCMI16.isPlaying) {
       Int16List int16list = Int16List.fromList(audio);
-      _playerPCMI16.feed(Uint8List.view(int16list.buffer));
-      // await Future.delayed(const Duration(milliseconds: 100));
-      // audioPart.clear();
-    }
-    //   //
-    //
-    //
-    //
-    //   // audioPart.addAll(audio);
-    //
-    //
-    // });
-
-    // if(audioPart.length > 10000){
-    //
-    //   audioPart.clear();
-    // };
-
-    // print("Default List${audio}");
-    // print("Uint8List List${Uint8List.fromList(audio)}");
-    // player.foodSink!.add(FoodData(Uint8List.fromList(audio)));
-
-    // player.foodSink!.add(FoodData(Uint8List.fromList(audio)));
-
-    // methodChannel
-    //     .invokeMethod(
-    //     "playAudio",
-    //     {
-    //       "audioBuffer":audio,
-    //     });
-    // TODO: implement onAudioReceived
+      player.foodSink!.add(FoodData(Uint8List.view(int16list.buffer)));
+       print("Uint8List List${Uint8List.fromList(audio)}");
   }
 
-  runMic() async {
-    final session = await AudioSession.instance;
-    await session.configure(const AudioSessionConfiguration.speech());
-
-    FlutterSoundPlayer player = FlutterSoundPlayer();
-
-    player.openPlayer();
-    player.startPlayerFromStream(
-        codec: Codec.pcm16, sampleRate: 8000, numChannels: 1);
-
-    FlutterSoundRecorder sound = FlutterSoundRecorder();
-    await sound.openRecorder();
-
-    var recordingDataController = StreamController<Food>();
-
-    recordingDataController.stream.listen((buffer) {
-      if (buffer is FoodData) {
-        // player.feedFromStream(buffer.data!);
-
-        // List<int> intList = List<int>.filled(160, 0);
-        // for (int i = 0; i < 160; i++) {
-        //   intList[i] = buffer!.data![i] - 256;
-        // }
-        //
-
-        // Uint8List list = Uint8List.sublistView(buffer.data!  ,0 , 640 );
-
-        Uint8List u8list = Uint8List.fromList(buffer.data!);
-
-        print("All length${buffer.data?.length}");
-
-        Int16List int16List = Int16List.view(u8list.buffer);
-
-        print("INT16List${int16List.length}");
-
-        if (int16List.length > 160) {
-          transmitAudioData(int16List.getRange(0, 160).toList());
-          // methodChannel
-          //     .invokeMethod(
-          //     "playAudio",
-          //     {
-          //       "audioBuffer":int16List.getRange(0, 160).toList()
-          //     });
-        } else {
-          transmitAudioData(int16List.toList());
-
-          // methodChannel
-          //     .invokeMethod(
-          //     "playAudio",
-          //     {
-          //       "audioBuffer":int16List.toList()
-          //     });
-        }
-      }
-    });
-
-    await sound!.startRecorder(
-        toStream: recordingDataController.sink,
-        codec: Codec.pcm16,
-        numChannels: 1,
-        sampleRate: 8000,
-        bitRate: 512,
-        audioSource: AudioSource.voice_communication);
-    //   MicStream.shouldRequestPermission(true);
-    //   stream = await MicStream.microphone(
-    //     audioSource: AudioSource.VOICE_COMMUNICATION,
-    //     sampleRate: 8000, //1000 * (rng.nextInt(50) + 30),
-    //     channelConfig: ChannelConfig.CHANNEL_IN_MONO,
-    //     audioFormat: AudioFormat.ENCODING_PCM_16BIT,
-    //   );
-    //
-    //   // after invoking the method for the first time, though, these will be available;
-    //   // It is not necessary to setup a listener first, the stream only needs to be returned first
-    //   stream!.listen((  sample){
-    //
-    //     Future.microtask(() {
-    //       Uint8List data = Uint8List.fromList(sample);
-    //       print("Data 8 = ${data}");
-    //       // ByteData byteData = ByteData.view(data.buffer , );
-    //       // Int16List int16List = Int16List.sublistView(data , );
-    //       // print("Data 8list = ${data.buffer.asByteData().getUint8(0)}");
-    //
-    //       Int16List list = Int16List.view(data.buffer);
-    //       print("Data 16= ${list.length}");
-    //
-    //
-    //       methodChannel
-    //           .invokeMethod(
-    //           "playAudio",
-    //           {
-    //             "audioBuffer":list.getRange(0  , 160).toList()
-    //           });
-    //     });
-    //
-    //
-    //     // transmitAudioData(sample.getRange(0, 160).toList());
-    //   });
-  }
 
   transmitAudioData(List<int> audioData) {
     if (audioData.length != 160) {
@@ -397,16 +324,14 @@ class _MyHomePageState extends State<MyHomePage>
 
     String keyEncrypt = socketConnectHelper.keyEncepted;
     Uint8List keyUin8List = Uint8List.fromList(keyEncrypt.codeUnits);
-    // print("keyUin8List = ${keyUin8List.toList()}\n");
     Uint8List cypherUnit8List = Sodium.cryptoAeadChacha20poly1305Encrypt(data,
         null, null, ByteArray(nonceData).bytes, ByteArray(keyUin8List).bytes);
-
-    // log("cypherUnit8List    ${cypherUnit8List.toList()}");
-
-    // List<int> encryptedPacket = List.filled(cypherUnit8List.length + nonceData.length + 1 , 0 , growable: false); // 189
     Uint8List encryptedPacket = Uint8List(
       cypherUnit8List.length + nonceData.length + 1,
     ); // 189
+
+
+
 
     encryptedPacket[0] =
         UdpConstants.PACKET_ENCRYPTION_TYPE_1.value; // -31 && 225
@@ -420,9 +345,9 @@ class _MyHomePageState extends State<MyHomePage>
     // List.copyRange(encryptedPacket, nonceData.length , cypherUnit8List);
 
     // log("encryptedPacket    ${encryptedPacket.toList()}");
-    // print("LEbght${Int8List.view(encryptedPacket.buffer).toList()}");
+    // print("Sent${Int8List.view(encryptedPacket.buffer).toList()}");
 
-    socketConnectHelper.sendPacket(Int8List.view(encryptedPacket.buffer));
+    socketConnectHelper.sendPacket(Int8List.view(encryptedPacket.buffer).toList());
     // socketConnectHelper.processPacket(Datagram(encryptedPacket, InternetAddress("94.130.65.54", type: InternetAddressType.any), 6999) , this , audioQueue );
 
     encryptionNonce++;

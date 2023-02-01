@@ -47,5 +47,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+
+	<key>NSMicrophoneUsageDescription</key>
+    <string>MyApp uses the microphone to record your speech and send it to intercom device.</string>
+
 </dict>
 </plist>
